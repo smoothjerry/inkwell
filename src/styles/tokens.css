@@ -1,0 +1,66 @@
+/*
+ * Design tokens (docs/DESIGN_SPEC.md §8).
+ *
+ * The app sets `data-theme="light" | "dark"` on <html> (see src/app/use-theme.ts).
+ * Until that runs, the media query below follows the OS so there is no flash.
+ * The dark values appear twice on purpose; keep the two blocks in sync.
+ */
+
+:root {
+  color-scheme: light;
+
+  --bg: #ffffff;
+  --bg-subtle: #fafafa;
+  --fg: #0a0a0a;
+  --fg-muted: #666666;
+  --border: #eaeaea;
+  --border-strong: #d4d4d4;
+  --accent: #0a0a0a;
+  --success: #16a34a;
+  --streak: #f97316;
+  /* Not in the spec table; needed by shadcn's destructive variants. */
+  --danger: #dc2626;
+  --focus-ring: rgb(0 112 243 / 0.4);
+  --shadow-overlay: 0 8px 30px rgb(0 0 0 / 0.12);
+
+  --radius-control: 6px;
+  --radius-card: 8px;
+  --radius-dialog: 12px;
+
+  --sidebar-width: 260px;
+  --status-bar-height: 28px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+
+    --bg: #000000;
+    --bg-subtle: #0a0a0a;
+    --fg: #ededed;
+    --fg-muted: #a1a1a1;
+    --border: #1f1f1f;
+    --border-strong: #333333;
+    --accent: #ededed;
+    --success: #22c55e;
+    --streak: #fb923c;
+    --danger: #ef4444;
+    --shadow-overlay: 0 8px 30px rgb(0 0 0 / 0.6);
+  }
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #000000;
+  --bg-subtle: #0a0a0a;
+  --fg: #ededed;
+  --fg-muted: #a1a1a1;
+  --border: #1f1f1f;
+  --border-strong: #333333;
+  --accent: #ededed;
+  --success: #22c55e;
+  --streak: #fb923c;
+  --danger: #ef4444;
+  --shadow-overlay: 0 8px 30px rgb(0 0 0 / 0.6);
+}
