@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+coverage/
+*.tsbuildinfo
+
+# Tauri / Rust
+src-tauri/target/
+src-tauri/gen/schemas/
+
+# Local environment
+.env
+.env.*
+!.env.example
+.DS_Store
+*.log
+
+# Editors / agents
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.claude/settings.local.json
