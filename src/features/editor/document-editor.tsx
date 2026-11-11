@@ -6,6 +6,7 @@ import { createAutosaver } from "./autosaver";
 import { BubbleToolbar } from "./bubble-toolbar";
 import { DocumentTitle } from "./document-title";
 import { createEditorExtensions } from "./editor-extensions";
+import { SlashMenu } from "./slash-menu";
 
 type DocumentEditorProps = {
   documentId: string;
@@ -63,6 +64,7 @@ export function DocumentEditor({ documentId, initialContent }: DocumentEditorPro
       <DocumentTitle documentId={documentId} onEnter={() => editor.commands.focus("start")} />
       <EditorContent editor={editor} />
       <BubbleToolbar editor={editor} />
+      <SlashMenu />
     </>
   );
 }

@@ -2,6 +2,7 @@ import { TaskItem, TaskList } from "@tiptap/extension-list";
 import { Typography } from "@tiptap/extension-typography";
 import { Placeholder } from "@tiptap/extensions";
 import { StarterKit } from "@tiptap/starter-kit";
+import { SlashCommand } from "./slash-command";
 
 /**
  * The one place the editor's extensions are assembled (DESIGN_SPEC §4.4), so
@@ -17,6 +18,7 @@ export function createEditorExtensions() {
     Typography,
     TaskList,
     TaskItem.configure({ nested: true }),
-    Placeholder.configure({ placeholder: "Start writing…" }),
+    Placeholder.configure({ placeholder: "Start writing, or type / for blocks" }),
+    SlashCommand,
   ];
 }
