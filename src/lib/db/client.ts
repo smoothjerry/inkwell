@@ -11,7 +11,11 @@ let connection: Promise<Database> | undefined;
  * the plugin's SQLite driver on every connection.
  */
 export function getDb(): Promise<Database> {
-  connection ??= open();
+  // A failed open is not cached, so the next call tries again.
+  connection ??= open().catch((error: unknown) => {
+    connection = undefined;
+    throw error;
+  });
   return connection;
 }
 
