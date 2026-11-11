@@ -102,3 +102,27 @@ export async function restoreDocument(id: string): Promise<void> {
     [id, Date.now()],
   );
 }
+
+/** Returns a document's Tiptap JSON content, or null if the document does not exist. */
+export async function getDocumentContent(id: string): Promise<string | null> {
+  const db = await getDb();
+  const rows = await db.select<{ content: string }[]>(
+    "SELECT content FROM documents WHERE id = $1",
+    [id],
+  );
+  return rows[0]?.content ?? null;
+}
+
+export async function saveDocumentContent(
+  id: string,
+  content: string,
+  plainText: string,
+  wordCount: number,
+): Promise<void> {
+  const db = await getDb();
+  await db.execute(
+    `UPDATE documents SET content = $2, plain_text = $3, word_count = $4, updated_at = $5
+     WHERE id = $1`,
+    [id, content, plainText, wordCount, Date.now()],
+  );
+}

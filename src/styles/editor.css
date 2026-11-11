@@ -1,0 +1,208 @@
+/* Editor canvas and document typography (DESIGN_SPEC §7.3, §8). */
+
+.editor-column {
+  --editor-font: var(--font-sans);
+  --editor-width: 68ch;
+
+  width: 100%;
+  max-width: calc(var(--editor-width) + 4rem);
+  margin-inline: auto;
+  padding: 1.5rem 2rem 40vh;
+  font-family: var(--editor-font);
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+.editor-column[data-font="serif"] {
+  --editor-font: "Newsreader Variable", Georgia, serif;
+
+  font-size: 18px;
+}
+
+.editor-column[data-font="mono"] {
+  --editor-font: var(--font-mono);
+
+  font-size: 15px;
+}
+
+.editor-column[data-width="narrow"] {
+  --editor-width: 56ch;
+}
+
+.editor-column[data-width="wide"] {
+  --editor-width: 84ch;
+}
+
+.editor-prose {
+  min-height: 50vh;
+  outline: none;
+  cursor: text;
+  user-select: text;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.editor-prose > * + * {
+  margin-top: 0.75em;
+}
+
+.editor-prose h1,
+.editor-prose h2,
+.editor-prose h3 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.editor-prose h1 {
+  margin-top: 1.6em;
+  font-size: 1.75em;
+}
+
+.editor-prose h2 {
+  margin-top: 1.5em;
+  font-size: 1.375em;
+}
+
+.editor-prose h3 {
+  margin-top: 1.4em;
+  font-size: 1.125em;
+}
+
+.editor-prose > :first-child {
+  margin-top: 0;
+}
+
+.editor-prose ul,
+.editor-prose ol {
+  padding-left: 1.5em;
+}
+
+.editor-prose ul {
+  list-style: disc;
+}
+
+.editor-prose ol {
+  list-style: decimal;
+}
+
+.editor-prose li > * + * {
+  margin-top: 0.25em;
+}
+
+.editor-prose ul[data-type="taskList"] {
+  padding-left: 0;
+  list-style: none;
+}
+
+.editor-prose ul[data-type="taskList"] > li {
+  display: flex;
+  gap: 0.6em;
+}
+
+.editor-prose ul[data-type="taskList"] > li > label {
+  flex: none;
+  margin-top: 0.3em;
+  user-select: none;
+}
+
+.editor-prose ul[data-type="taskList"] > li > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.editor-prose ul[data-type="taskList"] > li[data-checked="true"] > div {
+  color: var(--fg-muted);
+  text-decoration: line-through;
+}
+
+.editor-prose ul[data-type="taskList"] input[type="checkbox"] {
+  width: 1em;
+  height: 1em;
+  accent-color: var(--fg);
+}
+
+.editor-prose blockquote {
+  padding-left: 1em;
+  border-left: 2px solid var(--border-strong);
+  color: var(--fg-muted);
+}
+
+.editor-prose code {
+  padding: 0.15em 0.35em;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+}
+
+.editor-prose pre {
+  padding: 0.9em 1em;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--bg-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  line-height: 1.6;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.editor-prose pre code {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: inherit;
+}
+
+.editor-prose hr {
+  margin-block: 2em;
+  border: 0;
+  border-top: 1px solid var(--border-strong);
+}
+
+.editor-prose a {
+  text-decoration: underline;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.editor-prose a:hover {
+  text-decoration-color: var(--fg);
+}
+
+.editor-prose ::selection {
+  background: var(--focus-ring);
+}
+
+/* Placeholder on an empty document. */
+.editor-prose p.is-editor-empty:first-child::before {
+  float: left;
+  height: 0;
+  color: var(--fg-muted);
+  content: attr(data-placeholder);
+  pointer-events: none;
+}
+
+.editor-title {
+  display: block;
+  width: 100%;
+  margin-bottom: 0.6em;
+  border: 0;
+  background: none;
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 2em;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  outline: none;
+  cursor: text;
+  user-select: text;
+}
+
+.editor-title::placeholder {
+  color: var(--fg-muted);
+}

@@ -15,3 +15,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - Local SQLite database with the initial schema migration (M1).
 - Library sidebar: nested folders and documents, with create, inline rename, move, and pinning.
 - Trash: move to trash, restore, empty, and automatic purge after 30 days.
+- Rich-text editor (M2): headings, lists, task lists, quotes, code blocks, dividers, and links, with Markdown shortcuts and smart typography.
+- Selection toolbar and a slash menu for inserting blocks.
+- Autosave, with pending edits flushed when the window loses focus or closes.
+- Editable document title, and editor font (sans, serif, mono) and width settings.
