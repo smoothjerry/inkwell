@@ -3,6 +3,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { EditorContent, type JSONContent, useEditor } from "@tiptap/react";
 import { useEffect, useState } from "react";
 import { createAutosaver } from "./autosaver";
+import { BubbleToolbar } from "./bubble-toolbar";
 import { DocumentTitle } from "./document-title";
 import { createEditorExtensions } from "./editor-extensions";
 
@@ -61,6 +62,7 @@ export function DocumentEditor({ documentId, initialContent }: DocumentEditorPro
     <>
       <DocumentTitle documentId={documentId} onEnter={() => editor.commands.focus("start")} />
       <EditorContent editor={editor} />
+      <BubbleToolbar editor={editor} />
     </>
   );
 }
