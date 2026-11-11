@@ -165,3 +165,24 @@
   content: attr(data-placeholder);
   pointer-events: none;
 }
+
+.editor-title {
+  display: block;
+  width: 100%;
+  margin-bottom: 0.6em;
+  border: 0;
+  background: none;
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 2em;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  outline: none;
+  cursor: text;
+  user-select: text;
+}
+
+.editor-title::placeholder {
+  color: var(--fg-muted);
+}
