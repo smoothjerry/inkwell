@@ -33,13 +33,28 @@ Inkwell is a Tauri 2 desktop app. A thin Rust shell hosts a webview that runs a 
 | UI kit | `src/components/ui/` | shadcn/ui components, copied into the repo. |
 | Styles | `src/styles/` | Design tokens (`tokens.css`) and global CSS (`globals.css`). |
 
-## Current state (M0)
+## Current state (M1)
 
-Only the scaffold exists:
+Storage and the library exist; the editor does not yet.
 
-- `src-tauri/src/lib.rs` builds and runs an empty Tauri app. No plugins or commands yet.
-- `src/app/app.tsx` renders the empty shell: sidebar, canvas, and status bar regions.
-- `src/features/`, `src/domain/`, and `src/lib/db/` do not exist yet. Each is created by the milestone that first needs it.
+- `src-tauri/src/lib.rs` registers `tauri-plugin-sql`. `migrations.rs` lists the migrations; the SQL is in `src-tauri/migrations/`.
+- `src/lib/db/` holds the connection (`client.ts`) and the folder, document, and trash repositories.
+- `src/features/library/` holds the library store and the sidebar components.
+- `src/app/app.tsx` renders the sidebar, a placeholder canvas showing the selected document's title, and the status bar.
+- `src/domain/` and the other feature folders do not exist yet. Each is created by the milestone that first needs it.
+
+## Storage
+
+- The database is `inkwell.db` in the app's config directory (on macOS, `~/Library/Application Support/com.smoothjerry.inkwell/`). It runs in WAL mode with foreign keys enforced.
+- Migrations run when the frontend first loads the database. The connection string must match in `migrations.rs` and `src/lib/db/client.ts`.
+- Each repository function is one SQL statement where possible. The plugin uses a connection pool, so multi-statement transactions from TypeScript are not reliable; operations that need several statements (trashing or restoring a folder) are ordered so that a failure part-way leaves data recoverable.
+
+## Library and trash
+
+- The library store reads the whole library (folders and document summaries, not content) after every change.
+- Deleting is a soft delete (`deleted_at`). Trashing a folder gives the folder, its subfolders, and their documents the same `deleted_at`; restoring the folder brings back the rows with that timestamp.
+- The trash lists only items that were trashed directly. An item restored while its parent is still in the trash moves to the top level.
+- Items are purged 30 days after being trashed; this runs when the library loads.
 
 ## Theming
 

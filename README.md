@@ -7,7 +7,7 @@ A fast, minimal, local-first desktop word processor with a built-in weekly writi
 
 Set a weekly word-count goal, write, and watch the streak grow. Everything stays on your machine: no account, no network calls.
 
-> **Status:** early development. Milestone M0 (scaffold) is done: the app opens an empty themed window. The editor, library, and streak features arrive in later milestones. See the [design spec](docs/DESIGN_SPEC.md#11-milestones-build-order).
+> **Status:** early development. Milestones M0 (scaffold) and M1 (storage and library) are done: you can organize documents in folders, pin them, and trash them, all saved locally. The editor and streak features arrive in later milestones. See the [design spec](docs/DESIGN_SPEC.md#11-milestones-build-order).
 
 ## Stack
 
