@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useLibraryStore } from "@/features/library";
 import { getDocumentContent } from "@/lib/db";
+import { whenSavesSettle } from "./autosaver";
 import { DocumentEditor } from "./document-editor";
 
 const EMPTY_DOCUMENT: JSONContent = { type: "doc", content: [{ type: "paragraph" }] };
@@ -29,7 +30,9 @@ export function EditorPane() {
       return;
     }
     let cancelled = false;
-    getDocumentContent(documentId)
+    // Wait for the previous document's last save, in case it is this one.
+    whenSavesSettle()
+      .then(() => getDocumentContent(documentId))
       .then((raw) => {
         if (!cancelled) {
           setLoaded({ id: documentId, content: parseContent(raw) });
