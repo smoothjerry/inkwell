@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "./tokens.css";
+@import "./editor.css";
 
 /* Geist is bundled from the `geist` package; nothing is fetched at runtime. */
 @font-face {
