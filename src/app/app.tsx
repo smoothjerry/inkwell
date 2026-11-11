@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { Toaster } from "sonner";
-import { EditorPane } from "@/features/editor";
+import { EditorPane, EditorPreferences } from "@/features/editor";
 import { LibrarySidebar, useLibraryStore } from "@/features/library";
+import { useSettingsStore } from "@/stores/settings-store";
 import { useThemeStore } from "@/stores/theme-store";
 import { ThemeToggle } from "./theme-toggle";
 import { useTheme } from "./use-theme";
@@ -13,6 +14,7 @@ export function App() {
 
   useEffect(() => {
     void useLibraryStore.getState().load();
+    void useSettingsStore.getState().load();
   }, []);
 
   return (
@@ -24,7 +26,8 @@ export function App() {
         <EditorPane />
       </main>
 
-      <footer className="col-span-2 flex items-center justify-end border-t bg-background px-2">
+      <footer className="col-span-2 flex items-center justify-end gap-1 border-t bg-background px-2">
+        <EditorPreferences />
         <ThemeToggle />
       </footer>
 

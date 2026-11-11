@@ -13,6 +13,26 @@
   line-height: 1.7;
 }
 
+.editor-column[data-font="serif"] {
+  --editor-font: "Newsreader Variable", Georgia, serif;
+
+  font-size: 18px;
+}
+
+.editor-column[data-font="mono"] {
+  --editor-font: var(--font-mono);
+
+  font-size: 15px;
+}
+
+.editor-column[data-width="narrow"] {
+  --editor-width: 56ch;
+}
+
+.editor-column[data-width="wide"] {
+  --editor-width: 84ch;
+}
+
 .editor-prose {
   min-height: 50vh;
   outline: none;

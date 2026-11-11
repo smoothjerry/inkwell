@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useLibraryStore } from "@/features/library";
 import { getDocumentContent } from "@/lib/db";
+import { useSettingsStore } from "@/stores/settings-store";
 import { whenSavesSettle } from "./autosaver";
 import { DocumentEditor } from "./document-editor";
 
@@ -23,6 +24,8 @@ function parseContent(raw: string | null): JSONContent {
 /** The editor canvas: loads the selected document and shows its editor. */
 export function EditorPane() {
   const documentId = useLibraryStore((state) => state.selectedDocumentId);
+  const editorFont = useSettingsStore((state) => state.editorFont);
+  const editorWidth = useSettingsStore((state) => state.editorWidth);
   const [loaded, setLoaded] = useState<{ id: string; content: JSONContent } | null>(null);
 
   useEffect(() => {
@@ -61,7 +64,7 @@ export function EditorPane() {
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
-      <div className="editor-column">
+      <div className="editor-column" data-font={editorFont} data-width={editorWidth}>
         <DocumentEditor key={documentId} documentId={documentId} initialContent={loaded.content} />
       </div>
     </div>
