@@ -22,3 +22,12 @@ All notable changes to this project are documented here. The format follows [Kee
 - Writing sessions (M3): recorded automatically, ending after 10 idle minutes, at local midnight, or when the app closes.
 - Status bar shows the document's word count and reading time, and the selection's word count.
 - Unit tests for word counting and session rules.
+- Weekly goal and streak (M4): a progress bar, streak count, and optional "today" ring in the status bar.
+- Settings view: weekly goal, daily target, week start, theme, editor font and width, celebrations, and session idle time.
+- First-launch setup and a Welcome document.
+- A short celebration when the weekly goal is reached.
+- Unit tests for week and streak rules.
+
+### Changed
+
+- The theme is now saved between launches. The theme, font, and width switches moved from the status bar to Settings.

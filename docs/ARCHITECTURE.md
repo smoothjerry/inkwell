@@ -33,16 +33,19 @@ Inkwell is a Tauri 2 desktop app. A thin Rust shell hosts a webview that runs a 
 | UI kit | `src/components/ui/` | shadcn/ui components, copied into the repo. |
 | Styles | `src/styles/` | Design tokens (`tokens.css`) and global CSS (`globals.css`). |
 
-## Current state (M3)
+## Current state (M4)
 
-Storage, the library, the editor, word counting, and session tracking exist. Goals, the streak, and stats do not yet.
+Storage, the library, the editor, sessions, goals, the streak, settings, and onboarding exist. The stats view, focus modes, search, and export do not yet.
 
 - `src-tauri/src/lib.rs` registers `tauri-plugin-sql`. `migrations.rs` lists the migrations; the SQL is in `src-tauri/migrations/`.
-- `src/lib/db/` holds the connection (`client.ts`) and the folder, document, trash, settings, and sessions repositories.
+- `src/lib/db/` holds the connection (`client.ts`) and the folder, document, trash, settings, sessions, and weeks repositories.
+- `src/domain/` holds the pure logic, each file with unit tests beside it: `word-count.ts`, `sessions.ts`, `weeks.ts`, `streak.ts`.
 - `src/features/library/` holds the library store and the sidebar components.
 - `src/features/editor/` holds the Tiptap editor, autosave, the session tracker, the selection toolbar, the slash menu, and the status-bar word count.
-- `src/domain/` holds the pure logic so far: `word-count.ts` and `sessions.ts`, each with unit tests beside it.
-- `src/stores/settings-store.ts` holds the settings read from SQLite (so far the editor font and width).
+- `src/features/stats/` holds the progress store and the status-bar progress bar, streak, today ring, and celebration.
+- `src/features/settings/` holds the Settings view and its controls.
+- `src/features/onboarding/` holds the first-launch dialog and the Welcome document.
+- `src/stores/` holds the two app-wide stores: settings (read from SQLite) and the current view (`editor` or `settings`; there is no router).
 
 ## Storage
 
@@ -85,13 +88,27 @@ Storage, the library, the editor, word counting, and session tracking exist. Goa
 
 `src/app/use-close-flush.ts` holds the single close-requested listener. It saves pending edits and ends the session before the window closes. Tauri closes the window as soon as any one listener finishes, so there must be only one.
 
+## Goals and the streak
+
+- The rules are pure functions: `src/domain/weeks.ts` (week boundaries, goal snapshots, the week-start change) and `src/domain/streak.ts`. Dates are local calendar dates as `YYYY-MM-DD` strings and all arithmetic is on calendar days, so daylight-saving changes cannot move a week boundary.
+- A `weeks` row is created the first time a week is touched, with a snapshot of the goal settings. Changing the goal updates the current week's row; past weeks keep theirs.
+- Changing the week start never re-buckets history. The week in which it changes runs on until the day before the first new-start day after its normal end, so that one week is 8 to 13 days long, with its goal pro-rated to `round(goal × days / 7)`. The stored row is not rewritten: the extension is derived from the next row (or the current setting) having a different start day.
+- The spec describes the transitional week as "1–13 days". With the rule above it is never shorter than 8.
+- `src/features/stats/progress-store.ts` recomputes this week's words, today's words, and the streak from `sessions` and `weeks` after every session write. The streak is never stored.
+- The goal celebration fires the first time a week's goal is reached. The week's start date is saved in the `lastCelebratedWeek` setting so it happens once per week.
+
+## Settings
+
+- `src/stores/settings-store.ts` holds every setting, loaded once from the `settings` table. `update()` changes the store immediately and saves in the background. Stored values that fail validation are ignored in favor of the default.
+- Two keys are not in the spec's list: `onboarded` and `lastCelebratedWeek`.
+
 ## Theming
 
 - `src/styles/tokens.css` defines the color, radius, and layout tokens from spec §8 as CSS variables, for light and dark.
 - `src/app/use-theme.ts` sets `data-theme="light" | "dark"` on `<html>`. In `system` mode it follows the OS and updates live.
 - Before JavaScript runs, a `prefers-color-scheme` media query applies the dark tokens, so the window does not flash.
 - `src/styles/globals.css` maps the tokens onto Tailwind v4 theme variables and onto the color names shadcn/ui expects (`background`, `foreground`, `primary`, `border`, …).
-- The theme choice is held in a Zustand store in memory. It moves to the SQLite `settings` table with the goal settings (M4).
+- The theme choice is the `theme` setting, saved with the other settings.
 
 ## Fonts
 
