@@ -1,11 +1,11 @@
 import { useEffect } from "react";
-import { useThemeStore } from "@/stores/theme-store";
+import { useSettingsStore } from "@/stores/settings-store";
 
 const DARK_QUERY = "(prefers-color-scheme: dark)";
 
 /** Keeps `data-theme` on <html> in sync with the theme setting and the OS. */
 export function useTheme() {
-  const theme = useThemeStore((state) => state.theme);
+  const theme = useSettingsStore((state) => state.theme);
 
   useEffect(() => {
     const root = document.documentElement;

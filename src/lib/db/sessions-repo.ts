@@ -62,3 +62,12 @@ export async function closeStaleSessions(): Promise<void> {
   );
   await db.execute("UPDATE sessions SET ended_at = started_at + active_ms WHERE ended_at IS NULL");
 }
+
+/** Net words written per local date, summed over that date's sessions. */
+export async function listDailyWords(): Promise<{ localDate: string; words: number }[]> {
+  const db = await getDb();
+  return db.select<{ localDate: string; words: number }[]>(
+    `SELECT local_date AS localDate, SUM(words) AS words
+     FROM sessions GROUP BY local_date ORDER BY local_date`,
+  );
+}

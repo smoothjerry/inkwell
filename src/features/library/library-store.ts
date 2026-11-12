@@ -2,6 +2,7 @@ import { toast } from "sonner";
 import { create } from "zustand";
 import type { DocumentSummary, Folder } from "@/lib/db";
 import * as db from "@/lib/db";
+import { useViewStore } from "@/stores/view-store";
 
 type LibraryState = {
   status: "loading" | "ready" | "error";
@@ -94,7 +95,10 @@ export const useLibraryStore = create<LibraryState>((set, get) => {
       }
     },
 
-    selectDocument: (id) => set({ selectedDocumentId: id }),
+    selectDocument: (id) => {
+      set({ selectedDocumentId: id });
+      useViewStore.getState().setView("editor");
+    },
 
     toggleFolder: (id) =>
       set((state) => ({
@@ -111,6 +115,7 @@ export const useLibraryStore = create<LibraryState>((set, get) => {
         const id = await db.createDocument(folderId);
         expand(folderId);
         set({ selectedDocumentId: id, renamingId: id });
+        useViewStore.getState().setView("editor");
       }),
 
     createFolder: (parentId) =>
