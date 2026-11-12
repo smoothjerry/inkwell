@@ -33,15 +33,15 @@ Inkwell is a Tauri 2 desktop app. A thin Rust shell hosts a webview that runs a 
 | UI kit | `src/components/ui/` | shadcn/ui components, copied into the repo. |
 | Styles | `src/styles/` | Design tokens (`tokens.css`) and global CSS (`globals.css`). |
 
-## Current state (M2)
+## Current state (M3)
 
-Storage, the library, and the editor exist. Word counting, sessions, goals, and stats do not yet.
+Storage, the library, the editor, word counting, and session tracking exist. Goals, the streak, and stats do not yet.
 
 - `src-tauri/src/lib.rs` registers `tauri-plugin-sql`. `migrations.rs` lists the migrations; the SQL is in `src-tauri/migrations/`.
-- `src/lib/db/` holds the connection (`client.ts`) and the folder, document, trash, and settings repositories.
+- `src/lib/db/` holds the connection (`client.ts`) and the folder, document, trash, settings, and sessions repositories.
 - `src/features/library/` holds the library store and the sidebar components.
-- `src/features/editor/` holds the Tiptap editor, autosave, the selection toolbar, and the slash menu.
-- `src/domain/word-count.ts` is the first piece of pure domain logic; the rest arrives with M3.
+- `src/features/editor/` holds the Tiptap editor, autosave, the session tracker, the selection toolbar, the slash menu, and the status-bar word count.
+- `src/domain/` holds the pure logic so far: `word-count.ts` and `sessions.ts`, each with unit tests beside it.
 - `src/stores/settings-store.ts` holds the settings read from SQLite (so far the editor font and width).
 
 ## Storage
@@ -68,8 +68,22 @@ Storage, the library, and the editor exist. Word counting, sessions, goals, and 
 
 - Each edit hands the current ProseMirror document to the autosaver (`autosaver.ts`). The document is immutable, so saving does not depend on the editor still being mounted.
 - A save runs 500 ms after the last edit, and at least every 5 s while edits continue. It writes the Tiptap JSON, the plain text, and the word count in one statement.
-- Pending edits are flushed when the window loses focus, on `beforeunload`, on Tauri's close-requested event (the window waits for the save), and when switching documents.
+- Pending edits are flushed when the window loses focus, when switching documents, and when the app closes (see Closing the app).
 - Saves run one at a time. Loading a document waits for outstanding saves, so reopening a document never reads stale content.
+
+## Word count and sessions
+
+- The rules are pure functions in `src/domain/sessions.ts`: when a session starts and ends, how active time accrues, and how net words are summed. They take times and counts as arguments and never read the clock.
+- `src/features/editor/session-tracker.ts` is the only stateful part. It holds the one active session, feeds edits to the domain functions, and writes the result through the sessions repository.
+- Each edit is recorded immediately, which is cheap. Counting words is deferred until 300 ms after the last edit; the count then updates the status bar and the session's stored words.
+- A document's start count for a session is its last known count before its first edit in that session.
+- Two timers run while a session is active, and none otherwise: one for the idle limit and one for local midnight.
+- A session cut by midnight ends at 23:59:59.999; the next edit starts a new session on the new date.
+- Sessions left open by a crash are closed on the next start (`closeStaleSessions`).
+
+### Closing the app
+
+`src/app/use-close-flush.ts` holds the single close-requested listener. It saves pending edits and ends the session before the window closes. Tauri closes the window as soon as any one listener finishes, so there must be only one.
 
 ## Theming
 
