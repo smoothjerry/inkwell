@@ -7,9 +7,13 @@ function words(count: number): string {
   return `${count.toLocaleString()} ${count === 1 ? "word" : "words"}`;
 }
 
-/** Status-bar text: the open document's word count and reading time. */
+/**
+ * Status-bar text: the open document's word count and reading time, or the
+ * selection's word count while text is selected.
+ */
 export function WordCountStatus() {
   const documentWords = useWordCountStore((state) => state.documentWords);
+  const selectionWords = useWordCountStore((state) => state.selectionWords);
 
   if (documentWords === null) {
     return null;
@@ -19,8 +23,9 @@ export function WordCountStatus() {
 
   return (
     <p className="px-1.5 font-mono text-[12px] text-muted-foreground tabular-nums">
-      {words(documentWords)}
-      {documentWords > 0 && ` · ${minutes} min read`}
+      {selectionWords === null
+        ? `${words(documentWords)}${documentWords > 0 ? ` · ${minutes} min read` : ""}`
+        : `${selectionWords.toLocaleString()} of ${words(documentWords)} selected`}
     </p>
   );
 }
