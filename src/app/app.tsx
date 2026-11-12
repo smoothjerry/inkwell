@@ -1,20 +1,24 @@
 import { useEffect } from "react";
 import { Toaster } from "sonner";
-import { EditorPane, EditorPreferences } from "@/features/editor";
+import { EditorPane, EditorPreferences, WordCountStatus } from "@/features/editor";
 import { LibrarySidebar, useLibraryStore } from "@/features/library";
+import { closeStaleSessions } from "@/lib/db";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useThemeStore } from "@/stores/theme-store";
 import { ThemeToggle } from "./theme-toggle";
+import { useCloseFlush } from "./use-close-flush";
 import { useTheme } from "./use-theme";
 
 /** Application shell: library sidebar, editor canvas, and status bar. */
 export function App() {
   useTheme();
+  useCloseFlush();
   const theme = useThemeStore((state) => state.theme);
 
   useEffect(() => {
     void useLibraryStore.getState().load();
     void useSettingsStore.getState().load();
+    closeStaleSessions().catch((error: unknown) => console.error(error));
   }, []);
 
   return (
@@ -26,9 +30,12 @@ export function App() {
         <EditorPane />
       </main>
 
-      <footer className="col-span-2 flex items-center justify-end gap-1 border-t bg-background px-2">
-        <EditorPreferences />
-        <ThemeToggle />
+      <footer className="col-span-2 flex items-center gap-1 border-t bg-background px-2">
+        <WordCountStatus />
+        <div className="ml-auto flex items-center gap-1">
+          <EditorPreferences />
+          <ThemeToggle />
+        </div>
       </footer>
 
       <Toaster theme={theme} position="bottom-right" />

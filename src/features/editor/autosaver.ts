@@ -9,6 +9,14 @@ const MAX_WAIT_MS = 5000;
 // All saves run one after another, so a later save can never land first.
 let queue: Promise<void> = Promise.resolve();
 
+// Flush functions of the autosavers that are currently in use.
+const live = new Set<() => Promise<void>>();
+
+/** Saves every pending edit now. Resolves when all of them are written. */
+export async function flushAutosaves(): Promise<void> {
+  await Promise.all([...live].map((flush) => flush()));
+}
+
 /** Resolves when every save requested so far has finished. */
 export function whenSavesSettle(): Promise<void> {
   return queue;
@@ -63,5 +71,16 @@ export function createAutosaver(documentId: string) {
     maxTimer ??= setTimeout(flush, MAX_WAIT_MS);
   }
 
-  return { schedule, flush };
+  /** Includes this autosaver in `flushAutosaves`. */
+  function activate() {
+    live.add(flush);
+  }
+
+  /** Saves any pending edit and leaves `flushAutosaves`. */
+  function dispose() {
+    live.delete(flush);
+    void flush();
+  }
+
+  return { schedule, flush, activate, dispose };
 }

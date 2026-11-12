@@ -19,3 +19,6 @@ All notable changes to this project are documented here. The format follows [Kee
 - Selection toolbar and a slash menu for inserting blocks.
 - Autosave, with pending edits flushed when the window loses focus or closes.
 - Editable document title, and editor font (sans, serif, mono) and width settings.
+- Writing sessions (M3): recorded automatically, ending after 10 idle minutes, at local midnight, or when the app closes.
+- Status bar shows the document's word count and reading time, and the selection's word count.
+- Unit tests for word counting and session rules.
