@@ -27,6 +27,9 @@ All notable changes to this project are documented here. The format follows [Kee
 - First-launch setup and a Welcome document.
 - A short celebration when the weekly goal is reached.
 - Unit tests for week and streak rules.
+- Stats view (M5): headline numbers, a 12-week bar chart with the goal line, a 52-week activity heatmap, recent sessions, and achievements.
+- Thirteen achievements, unlocked automatically with a notification.
+- Unit tests for achievement rules.
 
 ### Changed
 
