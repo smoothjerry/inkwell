@@ -1,3 +1,4 @@
+export * from "./achievements-repo";
 export * from "./documents-repo";
 export * from "./folders-repo";
 export * from "./sessions-repo";
