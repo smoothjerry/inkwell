@@ -40,8 +40,23 @@ let countTimer: ReturnType<typeof setTimeout> | undefined;
 // Database writes run in order, one at a time.
 let writes: Promise<void> = Promise.resolve();
 
+const writeListeners = new Set<() => void>();
+
+/** Calls `listener` after each session write, so progress can be recomputed. */
+export function subscribeToSessionWrites(listener: () => void): () => void {
+  writeListeners.add(listener);
+  return () => writeListeners.delete(listener);
+}
+
 function write(task: () => Promise<void>) {
-  writes = writes.then(task).catch((error: unknown) => console.error(error));
+  writes = writes
+    .then(task)
+    .then(() => {
+      for (const listener of writeListeners) {
+        listener();
+      }
+    })
+    .catch((error: unknown) => console.error(error));
 }
 
 function plainText(doc: ProseMirrorNode): string {
