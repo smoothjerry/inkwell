@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Toaster } from "sonner";
 import { EditorPane, subscribeToSessionWrites, WordCountStatus } from "@/features/editor";
 import { LibrarySidebar, useLibraryStore } from "@/features/library";
+import { OnboardingDialog } from "@/features/onboarding";
 import { SettingsView } from "@/features/settings";
 import { StreakBadge, TodayRing, useProgressStore, WeekProgress } from "@/features/stats";
 import { closeStaleSessions } from "@/lib/db";
@@ -49,6 +50,7 @@ export function App() {
         </div>
       </footer>
 
+      <OnboardingDialog />
       <Toaster theme={theme} position="bottom-right" />
     </div>
   );
