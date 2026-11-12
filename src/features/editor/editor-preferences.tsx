@@ -12,7 +12,7 @@ const BUTTON = "h-5 gap-1.5 px-1.5 text-[12px] text-muted-foreground capitalize"
 export function EditorPreferences() {
   const editorFont = useSettingsStore((state) => state.editorFont);
   const editorWidth = useSettingsStore((state) => state.editorWidth);
-  const { setEditorFont, setEditorWidth } = useSettingsStore.getState();
+  const { update } = useSettingsStore.getState();
 
   const nextFont = next(EDITOR_FONTS, editorFont);
   const nextWidth = next(EDITOR_WIDTHS, editorWidth);
@@ -24,7 +24,7 @@ export function EditorPreferences() {
         size="sm"
         className={BUTTON}
         aria-label={`Editor font: ${editorFont}. Switch to ${nextFont}.`}
-        onClick={() => setEditorFont(nextFont)}
+        onClick={() => update({ editorFont: nextFont })}
       >
         <Type className="size-3.5" strokeWidth={1.5} aria-hidden="true" />
         {editorFont}
@@ -34,7 +34,7 @@ export function EditorPreferences() {
         size="sm"
         className={BUTTON}
         aria-label={`Editor width: ${editorWidth}. Switch to ${nextWidth}.`}
-        onClick={() => setEditorWidth(nextWidth)}
+        onClick={() => update({ editorWidth: nextWidth })}
       >
         <MoveHorizontal className="size-3.5" strokeWidth={1.5} aria-hidden="true" />
         {editorWidth}

@@ -4,7 +4,6 @@ import { EditorPane, EditorPreferences, WordCountStatus } from "@/features/edito
 import { LibrarySidebar, useLibraryStore } from "@/features/library";
 import { closeStaleSessions } from "@/lib/db";
 import { useSettingsStore } from "@/stores/settings-store";
-import { useThemeStore } from "@/stores/theme-store";
 import { ThemeToggle } from "./theme-toggle";
 import { useCloseFlush } from "./use-close-flush";
 import { useTheme } from "./use-theme";
@@ -13,7 +12,7 @@ import { useTheme } from "./use-theme";
 export function App() {
   useTheme();
   useCloseFlush();
-  const theme = useThemeStore((state) => state.theme);
+  const theme = useSettingsStore((state) => state.theme);
 
   useEffect(() => {
     void useLibraryStore.getState().load();

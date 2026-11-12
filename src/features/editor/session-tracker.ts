@@ -11,6 +11,7 @@ import {
 } from "@/domain/sessions";
 import { countWords } from "@/domain/word-count";
 import { deleteSession, saveSession, saveSessionDoc } from "@/lib/db";
+import { useSettingsStore } from "@/stores/settings-store";
 import { useWordCountStore } from "./word-count-store";
 
 /**
@@ -19,9 +20,12 @@ import { useWordCountStore } from "./word-count-store";
  * so this is module state. Timers run only while a session is active.
  */
 
-const IDLE_MS = 10 * 60_000;
 const COUNT_DELAY_MS = 300;
-const options = { idleMs: IDLE_MS, newId: uuidv7 };
+
+/** The idle limit, from the `sessionIdleMinutes` setting. */
+function idleMs(): number {
+  return useSettingsStore.getState().sessionIdleMinutes * 60_000;
+}
 
 let active: Session | null = null;
 /** The latest edit whose words have not been counted yet. */
@@ -72,7 +76,7 @@ function clearSessionTimers() {
 /** Ends the active session if it has gone idle or the date has changed. */
 function checkExpiry() {
   flushWordCount();
-  const ended = active ? expireSession(active, Date.now(), IDLE_MS) : null;
+  const ended = active ? expireSession(active, Date.now(), idleMs()) : null;
   if (ended) {
     close(ended);
     active = null;
@@ -113,7 +117,7 @@ export function trackEdit(documentId: string, doc: ProseMirrorNode) {
   const result = recordActivity(
     previous,
     { documentId, at: now, currentWords: knownCounts.get(documentId) ?? 0 },
-    options,
+    { idleMs: idleMs(), newId: uuidv7 },
   );
   active = result.active;
 
@@ -130,7 +134,7 @@ export function trackEdit(documentId: string, doc: ProseMirrorNode) {
     midnightTimer = setTimeout(checkExpiry, endOfLocalDay(now) + 1 - now);
   }
   clearTimeout(idleTimer);
-  idleTimer = setTimeout(checkExpiry, IDLE_MS);
+  idleTimer = setTimeout(checkExpiry, idleMs());
 
   uncounted = { documentId, doc };
   clearTimeout(countTimer);
