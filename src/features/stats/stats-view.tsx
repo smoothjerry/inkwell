@@ -3,6 +3,8 @@ import { toast } from "sonner";
 import { listRecentSessions, type RecentSession } from "@/lib/db";
 import { KpiTiles } from "./kpi-tiles";
 import { useProgressStore } from "./progress-store";
+import { StatsSection } from "./stats-section";
+import { WeeklyChart } from "./weekly-chart";
 
 const RECENT_SESSIONS = 20;
 
@@ -26,6 +28,9 @@ export function StatsView() {
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-10 px-8 pt-2 pb-16">
         <h1 className="text-2xl font-semibold tracking-tight">Stats</h1>
         <KpiTiles recentSessions={recentSessions} />
+        <StatsSection title="Last 12 weeks">
+          <WeeklyChart />
+        </StatsSection>
       </div>
     </div>
   );
