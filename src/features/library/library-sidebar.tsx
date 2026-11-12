@@ -1,4 +1,5 @@
 import { FilePlus, FolderPlus } from "lucide-react";
+import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { DocumentItem } from "./document-item";
 import { FolderItem } from "./folder-item";
@@ -9,7 +10,12 @@ const HEADING =
   "px-2 pt-3 pb-1 text-[11px] font-medium text-muted-foreground uppercase tracking-wide";
 
 /** The sidebar: pinned documents, the folder tree, and the trash. */
-export function LibrarySidebar() {
+type LibrarySidebarProps = {
+  /** Shown at the bottom of the sidebar, below the trash. */
+  footer?: ReactNode;
+};
+
+export function LibrarySidebar({ footer }: LibrarySidebarProps) {
   const status = useLibraryStore((state) => state.status);
   const folders = useLibraryStore((state) => state.folders);
   const documents = useLibraryStore((state) => state.documents);
@@ -70,6 +76,7 @@ export function LibrarySidebar() {
       </nav>
 
       <TrashSection />
+      {footer}
     </aside>
   );
 }

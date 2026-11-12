@@ -1,16 +1,13 @@
 import { useEffect } from "react";
 import { Toaster } from "sonner";
-import {
-  EditorPane,
-  EditorPreferences,
-  subscribeToSessionWrites,
-  WordCountStatus,
-} from "@/features/editor";
+import { EditorPane, subscribeToSessionWrites, WordCountStatus } from "@/features/editor";
 import { LibrarySidebar, useLibraryStore } from "@/features/library";
+import { SettingsView } from "@/features/settings";
 import { StreakBadge, TodayRing, useProgressStore, WeekProgress } from "@/features/stats";
 import { closeStaleSessions } from "@/lib/db";
 import { useSettingsStore } from "@/stores/settings-store";
-import { ThemeToggle } from "./theme-toggle";
+import { useViewStore } from "@/stores/view-store";
+import { SidebarNav } from "./sidebar-nav";
 import { useCloseFlush } from "./use-close-flush";
 import { useTheme } from "./use-theme";
 
@@ -19,6 +16,7 @@ export function App() {
   useTheme();
   useCloseFlush();
   const theme = useSettingsStore((state) => state.theme);
+  const view = useViewStore((state) => state.view);
 
   useEffect(() => {
     void useLibraryStore.getState().load();
@@ -35,21 +33,19 @@ export function App() {
 
   return (
     <div className="grid h-full grid-cols-[var(--sidebar-width)_minmax(0,1fr)] grid-rows-[minmax(0,1fr)_var(--status-bar-height)]">
-      <LibrarySidebar />
+      <LibrarySidebar footer={<SidebarNav />} />
 
       <main className="flex min-h-0 min-w-0 flex-col bg-background">
         <div className="h-10 shrink-0" data-tauri-drag-region />
-        <EditorPane />
+        {view === "settings" ? <SettingsView /> : <EditorPane />}
       </main>
 
       <footer className="col-span-2 flex items-center gap-1 border-t bg-background px-2">
         <WeekProgress />
         <StreakBadge />
         <TodayRing />
-        <div className="ml-auto flex items-center gap-1">
+        <div className="ml-auto">
           <WordCountStatus />
-          <EditorPreferences />
-          <ThemeToggle />
         </div>
       </footer>
 
