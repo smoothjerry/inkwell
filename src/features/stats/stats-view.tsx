@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { listRecentSessions, type RecentSession } from "@/lib/db";
+import { ActivityHeatmap } from "./activity-heatmap";
 import { KpiTiles } from "./kpi-tiles";
 import { useProgressStore } from "./progress-store";
 import { StatsSection } from "./stats-section";
@@ -30,6 +31,9 @@ export function StatsView() {
         <KpiTiles recentSessions={recentSessions} />
         <StatsSection title="Last 12 weeks">
           <WeeklyChart />
+        </StatsSection>
+        <StatsSection title="Activity">
+          <ActivityHeatmap />
         </StatsSection>
       </div>
     </div>
