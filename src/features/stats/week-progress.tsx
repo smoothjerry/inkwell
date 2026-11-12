@@ -1,4 +1,6 @@
 import { cn } from "@/lib/utils";
+import { useSettingsStore } from "@/stores/settings-store";
+import { GoalConfetti } from "./goal-confetti";
 import { useProgressStore } from "./progress-store";
 
 /** Status-bar weekly goal: "1,240 / 2,500 this week" and a progress bar. */
@@ -6,6 +8,8 @@ export function WeekProgress() {
   const weekWords = useProgressStore((state) => state.weekWords);
   const goalWords = useProgressStore((state) => state.goalWords);
   const isLoaded = useProgressStore((state) => state.isLoaded);
+  const celebrationCount = useProgressStore((state) => state.celebrationCount);
+  const celebrations = useSettingsStore((state) => state.celebrations);
 
   if (!isLoaded || goalWords <= 0) {
     return null;
@@ -16,7 +20,7 @@ export function WeekProgress() {
   const summary = `${weekWords.toLocaleString()} of ${goalWords.toLocaleString()} words this week`;
 
   return (
-    <div className="flex items-center gap-2 px-1.5">
+    <div className="relative flex items-center gap-2 px-1.5">
       <p className="font-mono text-[12px] text-muted-foreground tabular-nums" aria-hidden="true">
         <span className="text-foreground">{weekWords.toLocaleString()}</span> /{" "}
         {goalWords.toLocaleString()} this week
@@ -32,12 +36,17 @@ export function WeekProgress() {
       >
         <div
           className={cn(
-            "h-full rounded-full transition-[width,background-color] duration-200 ease-out",
+            "relative h-full rounded-full transition-[width,background-color] duration-200 ease-out",
             isMet ? "bg-success" : "bg-foreground",
           )}
           style={{ width: `${percent}%` }}
-        />
+        >
+          {celebrations && celebrationCount > 0 && (
+            <div key={celebrationCount} className="goal-shimmer" />
+          )}
+        </div>
       </div>
+      <GoalConfetti />
     </div>
   );
 }

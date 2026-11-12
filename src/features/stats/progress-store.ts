@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { create } from "zustand";
 import { localDateOf } from "@/domain/sessions";
 import { computeStreak } from "@/domain/streak";
@@ -24,6 +25,8 @@ type ProgressState = {
   dailyTarget: number | null;
   currentStreak: number;
   longestStreak: number;
+  /** Goes up by one each time the weekly goal is newly reached; drives the animation. */
+  celebrationCount: number;
 
   /** Recomputes everything from the stored sessions and weeks. */
   refresh: () => Promise<void>;
@@ -49,6 +52,7 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
   dailyTarget: null,
   currentStreak: 0,
   longestStreak: 0,
+  celebrationCount: 0,
 
   refresh: async () => {
     try {
@@ -72,11 +76,29 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
       }));
       const streak = computeStreak(results, today);
       const current = weekContaining(weeks, today);
+      const weekWords = results.find((week) => week.weekStart === current?.weekStart)?.words ?? 0;
+
+      // Celebrate the first time this week's goal is reached (§6.7). A goal
+      // that was already met when the app opened is noted but not celebrated.
+      let { celebrationCount } = get();
+      const { lastCelebratedWeek, update } = useSettingsStore.getState();
+      if (
+        current &&
+        isWeekMet(weekWords, current.goalWords) &&
+        current.weekStart !== lastCelebratedWeek
+      ) {
+        update({ lastCelebratedWeek: current.weekStart });
+        if (get().isLoaded) {
+          celebrationCount += 1;
+          toast.success(`Weekly goal reached — 🔥 ${streak.current}-week streak`);
+        }
+      }
 
       set({
         isLoaded: true,
+        celebrationCount,
         weekStart: current?.weekStart ?? null,
-        weekWords: results.find((week) => week.weekStart === current?.weekStart)?.words ?? 0,
+        weekWords,
         goalWords: current?.goalWords ?? settings.weeklyGoal,
         todayWords: wordsByDate.get(today) ?? 0,
         dailyTarget: current?.dailyTarget ?? null,

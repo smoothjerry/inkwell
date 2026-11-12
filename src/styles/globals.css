@@ -4,6 +4,7 @@
 @import "@fontsource-variable/newsreader/wght-italic.css";
 @import "./tokens.css";
 @import "./editor.css";
+@import "./celebration.css";
 
 /* Geist is bundled from the `geist` package; nothing is fetched at runtime. */
 @font-face {
