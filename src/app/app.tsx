@@ -1,10 +1,16 @@
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { Toaster } from "sonner";
 import { EditorPane, subscribeToSessionWrites, WordCountStatus } from "@/features/editor";
 import { LibrarySidebar, useLibraryStore } from "@/features/library";
 import { OnboardingDialog } from "@/features/onboarding";
 import { SettingsView } from "@/features/settings";
-import { StreakBadge, TodayRing, useProgressStore, WeekProgress } from "@/features/stats";
+import {
+  StatsView,
+  StreakBadge,
+  TodayRing,
+  useProgressStore,
+  WeekProgress,
+} from "@/features/stats";
 import { closeStaleSessions } from "@/lib/db";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useViewStore } from "@/stores/view-store";
@@ -38,7 +44,13 @@ export function App() {
 
       <main className="flex min-h-0 min-w-0 flex-col bg-background">
         <div className="h-10 shrink-0" data-tauri-drag-region />
-        {view === "settings" ? <SettingsView /> : <EditorPane />}
+        {view === "editor" && <EditorPane />}
+        {view === "settings" && <SettingsView />}
+        {view === "stats" && (
+          <Suspense fallback={null}>
+            <StatsView />
+          </Suspense>
+        )}
       </main>
 
       <footer className="col-span-2 flex items-center gap-1 border-t bg-background px-2">
