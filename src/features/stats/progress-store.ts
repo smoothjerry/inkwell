@@ -5,6 +5,7 @@ import { computeStreak } from "@/domain/streak";
 import {
   applyGoalChange,
   ensureCurrentWeek,
+  type GoalSettings,
   isWeekMet,
   resolveWeeks,
   weekContaining,
@@ -47,8 +48,11 @@ type ProgressState = {
 
   /** Recomputes everything from the stored sessions and weeks. */
   refresh: () => Promise<void>;
-  /** Changes the weekly goal and daily target for this week and future weeks. */
-  changeGoal: (weeklyGoal: number, dailyTarget: number | null) => Promise<void>;
+  /**
+   * Saves the goal settings. The weekly goal and daily target apply to this
+   * week and future weeks; a new week start applies from the next week.
+   */
+  changeGoal: (goals: GoalSettings) => Promise<void>;
 };
 
 function goalSettings() {
@@ -146,8 +150,8 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
     }
   },
 
-  changeGoal: async (weeklyGoal, dailyTarget) => {
-    useSettingsStore.getState().update({ weeklyGoal, dailyTarget });
+  changeGoal: async (goals) => {
+    useSettingsStore.getState().update(goals);
     try {
       const today = localDateOf(Date.now());
       const { changed } = applyGoalChange(await listWeeks(), today, goalSettings());

@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { GoalFields } from "@/features/settings";
 import { listRecentSessions, type RecentSession } from "@/lib/db";
+import { useSettingsStore } from "@/stores/settings-store";
+import { AchievementsGrid } from "./achievements-grid";
 import { ActivityHeatmap } from "./activity-heatmap";
 import { KpiTiles } from "./kpi-tiles";
 import { useProgressStore } from "./progress-store";
+import { SessionsTable } from "./sessions-table";
 import { StatsSection } from "./stats-section";
 import { WeeklyChart } from "./weekly-chart";
 
@@ -11,6 +15,9 @@ const RECENT_SESSIONS = 20;
 
 /** The Stats view (DESIGN_SPEC §7.5). Loaded on demand; see ./index.ts. */
 export function StatsView() {
+  const weeklyGoal = useSettingsStore((state) => state.weeklyGoal);
+  const dailyTarget = useSettingsStore((state) => state.dailyTarget);
+  const weekStartsOn = useSettingsStore((state) => state.weekStartsOn);
   const [recentSessions, setRecentSessions] = useState<RecentSession[]>([]);
 
   // Sessions may have ended since the last refresh.
@@ -34,6 +41,18 @@ export function StatsView() {
         </StatsSection>
         <StatsSection title="Activity">
           <ActivityHeatmap />
+        </StatsSection>
+        <StatsSection title="Recent sessions">
+          <SessionsTable sessions={recentSessions} />
+        </StatsSection>
+        <StatsSection title="Achievements">
+          <AchievementsGrid />
+        </StatsSection>
+        <StatsSection title="Goal">
+          <GoalFields
+            values={{ weeklyGoal, dailyTarget, weekStartsOn }}
+            onChange={(goals) => void useProgressStore.getState().changeGoal(goals)}
+          />
         </StatsSection>
       </div>
     </div>

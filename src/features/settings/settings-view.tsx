@@ -1,6 +1,6 @@
 import { useProgressStore } from "@/features/stats";
 import { EDITOR_FONTS, EDITOR_WIDTHS, THEMES, useSettingsStore } from "@/stores/settings-store";
-import { GoalFields, type GoalValues } from "./goal-fields";
+import { GoalFields } from "./goal-fields";
 import { NumberField } from "./number-field";
 import { SegmentedControl } from "./segmented-control";
 import { SettingRow } from "./setting-row";
@@ -11,14 +11,6 @@ const SECTION_HEADING =
 /** The Settings view. Every change applies and saves immediately. */
 export function SettingsView() {
   const settings = useSettingsStore();
-
-  function changeGoals(next: GoalValues) {
-    if (next.weekStartsOn !== settings.weekStartsOn) {
-      settings.update({ weekStartsOn: next.weekStartsOn });
-    }
-    // Also updates this week's stored goal, then recomputes progress.
-    void useProgressStore.getState().changeGoal(next.weeklyGoal, next.dailyTarget);
-  }
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
@@ -35,7 +27,7 @@ export function SettingsView() {
               dailyTarget: settings.dailyTarget,
               weekStartsOn: settings.weekStartsOn,
             }}
-            onChange={changeGoals}
+            onChange={(goals) => void useProgressStore.getState().changeGoal(goals)}
           />
         </section>
 
