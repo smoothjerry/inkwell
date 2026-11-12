@@ -1,7 +1,13 @@
 import { useEffect } from "react";
 import { Toaster } from "sonner";
-import { EditorPane, EditorPreferences, WordCountStatus } from "@/features/editor";
+import {
+  EditorPane,
+  EditorPreferences,
+  subscribeToSessionWrites,
+  WordCountStatus,
+} from "@/features/editor";
 import { LibrarySidebar, useLibraryStore } from "@/features/library";
+import { StreakBadge, TodayRing, useProgressStore, WeekProgress } from "@/features/stats";
 import { closeStaleSessions } from "@/lib/db";
 import { useSettingsStore } from "@/stores/settings-store";
 import { ThemeToggle } from "./theme-toggle";
@@ -16,8 +22,15 @@ export function App() {
 
   useEffect(() => {
     void useLibraryStore.getState().load();
-    void useSettingsStore.getState().load();
     closeStaleSessions().catch((error: unknown) => console.error(error));
+    // Progress needs the goal settings, so it loads after them.
+    void useSettingsStore
+      .getState()
+      .load()
+      .then(() => useProgressStore.getState().refresh());
+
+    // Recompute progress whenever the session's words are saved.
+    return subscribeToSessionWrites(() => void useProgressStore.getState().refresh());
   }, []);
 
   return (
@@ -30,8 +43,11 @@ export function App() {
       </main>
 
       <footer className="col-span-2 flex items-center gap-1 border-t bg-background px-2">
-        <WordCountStatus />
+        <WeekProgress />
+        <StreakBadge />
+        <TodayRing />
         <div className="ml-auto flex items-center gap-1">
+          <WordCountStatus />
           <EditorPreferences />
           <ThemeToggle />
         </div>
