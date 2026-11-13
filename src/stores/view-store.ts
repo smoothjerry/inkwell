@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 /** What the main area shows. There is no router (DESIGN_SPEC §3). */
-export type View = "editor" | "settings";
+export type View = "editor" | "stats" | "settings";
 
 type ViewState = {
   view: View;

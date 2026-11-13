@@ -71,3 +71,49 @@ export async function listDailyWords(): Promise<{ localDate: string; words: numb
      FROM sessions GROUP BY local_date ORDER BY local_date`,
   );
 }
+
+export type SessionTotals = {
+  /** Net words over all sessions. */
+  lifetimeWords: number;
+  /** The most words in a single session. */
+  longestSessionWords: number;
+  /** Number of sessions with at least one word. */
+  sessionsWithWords: number;
+};
+
+export async function getSessionTotals(): Promise<SessionTotals> {
+  const db = await getDb();
+  const rows = await db.select<SessionTotals[]>(
+    `SELECT COALESCE(SUM(words), 0) AS lifetimeWords,
+            COALESCE(MAX(words), 0) AS longestSessionWords,
+            COUNT(CASE WHEN words > 0 THEN 1 END) AS sessionsWithWords
+     FROM sessions`,
+  );
+  return rows[0] ?? { lifetimeWords: 0, longestSessionWords: 0, sessionsWithWords: 0 };
+}
+
+export type RecentSession = SessionRecord & {
+  /** Titles of the documents edited in the session. */
+  documentTitles: string[];
+};
+
+// Unit separator: cannot appear in a title typed by a user.
+const TITLE_SEPARATOR = "\u001f";
+
+/** The most recent sessions, newest first, with the documents they touched. */
+export async function listRecentSessions(limit: number): Promise<RecentSession[]> {
+  const db = await getDb();
+  const rows = await db.select<(SessionRecord & { titles: string | null })[]>(
+    `SELECT s.id, s.local_date AS localDate, s.started_at AS startedAt, s.ended_at AS endedAt,
+            s.active_ms AS activeMs, s.words,
+            (SELECT group_concat(d.title, char(31))
+             FROM session_docs sd JOIN documents d ON d.id = sd.document_id
+             WHERE sd.session_id = s.id) AS titles
+     FROM sessions s ORDER BY s.started_at DESC LIMIT $1`,
+    [limit],
+  );
+  return rows.map(({ titles, ...session }) => ({
+    ...session,
+    documentTitles: titles ? titles.split(TITLE_SEPARATOR) : [],
+  }));
+}
