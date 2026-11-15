@@ -18,6 +18,7 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { useViewStore } from "@/stores/view-store";
 import { SidebarNav } from "./sidebar-nav";
 import { useCloseFlush } from "./use-close-flush";
+import { useMenuEvents } from "./use-menu-events";
 import { useTheme } from "./use-theme";
 import { useZenEscape } from "./use-zen-escape";
 
@@ -29,6 +30,7 @@ export function App() {
   const view = useViewStore((state) => state.view);
   const isZen = useViewStore((state) => state.isZen);
   useZenEscape();
+  useMenuEvents();
 
   useEffect(() => {
     void useLibraryStore.getState().load();
