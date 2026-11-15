@@ -26,6 +26,7 @@ export function EditorPane() {
   const documentId = useLibraryStore((state) => state.selectedDocumentId);
   const editorFont = useSettingsStore((state) => state.editorFont);
   const editorWidth = useSettingsStore((state) => state.editorWidth);
+  const typewriterMode = useSettingsStore((state) => state.typewriterMode);
   const [loaded, setLoaded] = useState<{ id: string; content: JSONContent } | null>(null);
 
   useEffect(() => {
@@ -63,8 +64,13 @@ export function EditorPane() {
   }
 
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto">
-      <div className="editor-column" data-font={editorFont} data-width={editorWidth}>
+    <div className="editor-scroll min-h-0 flex-1 overflow-y-auto">
+      <div
+        className="editor-column"
+        data-font={editorFont}
+        data-width={editorWidth}
+        data-typewriter={typewriterMode}
+      >
         <DocumentEditor key={documentId} documentId={documentId} initialContent={loaded.content} />
       </div>
     </div>

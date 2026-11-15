@@ -206,3 +206,23 @@
 .editor-title::placeholder {
   color: var(--fg-muted);
 }
+
+/*
+ * Dimming: everything fades to 30% except the sentence or paragraph being
+ * written (see features/editor/focus-dimming.ts). It fades the text color,
+ * not the elements, so the focused range can be restored from inside.
+ */
+.editor-prose.is-dimming,
+.editor-prose.is-dimming blockquote,
+.editor-prose.is-dimming ul[data-type="taskList"] > li[data-checked="true"] > div {
+  color: color-mix(in srgb, var(--fg) 30%, transparent);
+}
+
+.editor-prose.is-dimming .editor-focus {
+  color: var(--fg);
+}
+
+/* Typewriter scrolling needs room to bring the last line up to the caret position. */
+.editor-column[data-typewriter="true"] {
+  padding-bottom: 60vh;
+}

@@ -1,6 +1,7 @@
 import { EditorContent, type JSONContent, useEditor } from "@tiptap/react";
 import { useEffect, useRef, useState } from "react";
 import { countWords } from "@/domain/word-count";
+import { useSettingsStore } from "@/stores/settings-store";
 import { createAutosaver } from "./autosaver";
 import { BubbleToolbar } from "./bubble-toolbar";
 import { DocumentTitle } from "./document-title";
@@ -65,6 +66,14 @@ export function DocumentEditor({ documentId, initialContent }: DocumentEditorPro
       useWordCountStore.setState({ documentWords: null, selectionWords: null });
     };
   }, [documentId, editor]);
+
+  // The dimming plugin reads the setting when the editor redraws, so a
+  // change of setting has to trigger a redraw.
+  const dimMode = useSettingsStore((state) => state.dimMode);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: dimMode is the trigger, not an input.
+  useEffect(() => {
+    editor.view.dispatch(editor.state.tr);
+  }, [editor, dimMode]);
 
   return (
     <>
