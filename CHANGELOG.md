@@ -30,6 +30,8 @@ All notable changes to this project are documented here. The format follows [Kee
 - Stats view (M5): headline numbers, a 12-week bar chart with the goal line, a 52-week activity heatmap, recent sessions, and achievements.
 - Thirteen achievements, unlocked automatically with a notification.
 - Unit tests for achievement rules.
+- Focus features (M6): zen mode, typewriter scrolling, and sentence or paragraph dimming.
+- A native View menu with shortcuts for the focus features.
 
 ### Changed
 
