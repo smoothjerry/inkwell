@@ -5,6 +5,7 @@
 @import "./tokens.css";
 @import "./editor.css";
 @import "./celebration.css";
+@import "./zen.css";
 
 /* Geist is bundled from the `geist` package; nothing is fetched at runtime. */
 @font-face {
