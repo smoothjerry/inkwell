@@ -31,9 +31,8 @@ export function OnboardingDialog() {
   }
 
   async function finish() {
-    const settings = useSettingsStore.getState();
-    settings.update({ weekStartsOn: goals.weekStartsOn, onboarded: true });
-    await useProgressStore.getState().changeGoal(goals.weeklyGoal, goals.dailyTarget);
+    useSettingsStore.getState().update({ onboarded: true });
+    await useProgressStore.getState().changeGoal(goals);
     try {
       const id = await createWelcomeDocument();
       await useLibraryStore.getState().load();

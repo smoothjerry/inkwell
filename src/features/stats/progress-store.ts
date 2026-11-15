@@ -5,6 +5,7 @@ import { computeStreak } from "@/domain/streak";
 import {
   applyGoalChange,
   ensureCurrentWeek,
+  type GoalSettings,
   isWeekMet,
   resolveWeeks,
   weekContaining,
@@ -12,6 +13,16 @@ import {
 } from "@/domain/weeks";
 import { listDailyWords, listWeeks, saveWeek } from "@/lib/db";
 import { useSettingsStore } from "@/stores/settings-store";
+import { type AchievementView, checkAchievements } from "./achievement-check";
+
+/** A stored week with its words, for the chart and the streak. */
+export type WeekSummary = {
+  weekStart: string;
+  weekEnd: string;
+  words: number;
+  goalWords: number;
+  met: boolean;
+};
 
 type ProgressState = {
   /** False until progress has been read from the database once. */
@@ -27,11 +38,21 @@ type ProgressState = {
   longestStreak: number;
   /** Goes up by one each time the weekly goal is newly reached; drives the animation. */
   celebrationCount: number;
+  /** Every stored week, oldest first. */
+  weeks: WeekSummary[];
+  /** Net words per local date ('YYYY-MM-DD'). */
+  wordsByDate: Record<string, number>;
+  lifetimeWords: number;
+  /** Achievements with their current state and, if unlocked, when. */
+  achievements: AchievementView[];
 
   /** Recomputes everything from the stored sessions and weeks. */
   refresh: () => Promise<void>;
-  /** Changes the weekly goal and daily target for this week and future weeks. */
-  changeGoal: (weeklyGoal: number, dailyTarget: number | null) => Promise<void>;
+  /**
+   * Saves the goal settings. The weekly goal and daily target apply to this
+   * week and future weeks; a new week start applies from the next week.
+   */
+  changeGoal: (goals: GoalSettings) => Promise<void>;
 };
 
 function goalSettings() {
@@ -53,6 +74,10 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
   currentStreak: 0,
   longestStreak: 0,
   celebrationCount: 0,
+  weeks: [],
+  wordsByDate: {},
+  lifetimeWords: 0,
+  achievements: [],
 
   refresh: async () => {
     try {
@@ -68,12 +93,16 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
       const dailyWords = await listDailyWords();
       const wordsByDate = new Map(dailyWords.map((day) => [day.localDate, day.words]));
       const weeks = resolveWeeks(ensured.rows, settings.weekStartsOn);
-      const results = weeks.map((week) => ({
-        weekStart: week.weekStart,
-        weekEnd: week.weekEnd,
-        words: wordsInWeek(week, wordsByDate),
-        met: isWeekMet(wordsInWeek(week, wordsByDate), week.goalWords),
-      }));
+      const results: WeekSummary[] = weeks.map((week) => {
+        const words = wordsInWeek(week, wordsByDate);
+        return {
+          weekStart: week.weekStart,
+          weekEnd: week.weekEnd,
+          words,
+          goalWords: week.goalWords,
+          met: isWeekMet(words, week.goalWords),
+        };
+      });
       const streak = computeStreak(results, today);
       const current = weekContaining(weeks, today);
       const weekWords = results.find((week) => week.weekStart === current?.weekStart)?.words ?? 0;
@@ -94,9 +123,19 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
         }
       }
 
+      const { achievements, lifetimeWords } = await checkAchievements(
+        weeks,
+        wordsByDate,
+        streak.current,
+      );
+
       set({
         isLoaded: true,
         celebrationCount,
+        weeks: results,
+        wordsByDate: Object.fromEntries(wordsByDate),
+        lifetimeWords,
+        achievements,
         weekStart: current?.weekStart ?? null,
         weekWords,
         goalWords: current?.goalWords ?? settings.weeklyGoal,
@@ -111,8 +150,8 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
     }
   },
 
-  changeGoal: async (weeklyGoal, dailyTarget) => {
-    useSettingsStore.getState().update({ weeklyGoal, dailyTarget });
+  changeGoal: async (goals) => {
+    useSettingsStore.getState().update(goals);
     try {
       const today = localDateOf(Date.now());
       const { changed } = applyGoalChange(await listWeeks(), today, goalSettings());

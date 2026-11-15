@@ -1,12 +1,9 @@
+import type { GoalSettings } from "@/domain/weeks";
 import { cn } from "@/lib/utils";
 import { NumberField } from "./number-field";
 import { SettingRow } from "./setting-row";
 
-export type GoalValues = {
-  weeklyGoal: number;
-  dailyTarget: number | null;
-  weekStartsOn: number;
-};
+export type GoalValues = GoalSettings;
 
 type GoalFieldsProps = {
   values: GoalValues;

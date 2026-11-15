@@ -33,19 +33,19 @@ Inkwell is a Tauri 2 desktop app. A thin Rust shell hosts a webview that runs a 
 | UI kit | `src/components/ui/` | shadcn/ui components, copied into the repo. |
 | Styles | `src/styles/` | Design tokens (`tokens.css`) and global CSS (`globals.css`). |
 
-## Current state (M4)
+## Current state (M5)
 
-Storage, the library, the editor, sessions, goals, the streak, settings, and onboarding exist. The stats view, focus modes, search, and export do not yet.
+Storage, the library, the editor, sessions, goals, the streak, settings, onboarding, and the stats view exist. Focus modes, search, and export do not yet.
 
 - `src-tauri/src/lib.rs` registers `tauri-plugin-sql`. `migrations.rs` lists the migrations; the SQL is in `src-tauri/migrations/`.
-- `src/lib/db/` holds the connection (`client.ts`) and the folder, document, trash, settings, sessions, and weeks repositories.
-- `src/domain/` holds the pure logic, each file with unit tests beside it: `word-count.ts`, `sessions.ts`, `weeks.ts`, `streak.ts`.
+- `src/lib/db/` holds the connection (`client.ts`) and the folder, document, trash, settings, sessions, weeks, and achievements repositories.
+- `src/domain/` holds the pure logic, each file with unit tests beside it: `word-count.ts`, `sessions.ts`, `weeks.ts`, `streak.ts`, `achievements.ts`.
 - `src/features/library/` holds the library store and the sidebar components.
 - `src/features/editor/` holds the Tiptap editor, autosave, the session tracker, the selection toolbar, the slash menu, and the status-bar word count.
-- `src/features/stats/` holds the progress store and the status-bar progress bar, streak, today ring, and celebration.
+- `src/features/stats/` holds the progress store, the status-bar progress bar, streak, today ring, and celebration, and the Stats view.
 - `src/features/settings/` holds the Settings view and its controls.
 - `src/features/onboarding/` holds the first-launch dialog and the Welcome document.
-- `src/stores/` holds the two app-wide stores: settings (read from SQLite) and the current view (`editor` or `settings`; there is no router).
+- `src/stores/` holds the two app-wide stores: settings (read from SQLite) and the current view (`editor`, `stats`, or `settings`; there is no router).
 
 ## Storage
 
@@ -96,6 +96,13 @@ Storage, the library, the editor, sessions, goals, the streak, settings, and onb
 - The spec describes the transitional week as "1–13 days". With the rule above it is never shorter than 8.
 - `src/features/stats/progress-store.ts` recomputes this week's words, today's words, and the streak from `sessions` and `weeks` after every session write. The streak is never stored.
 - The goal celebration fires the first time a week's goal is reached. The week's start date is saved in the `lastCelebratedWeek` setting so it happens once per week.
+
+## Stats view and achievements
+
+- `StatsView` is loaded with `React.lazy` from `src/features/stats/index.ts`, so the view and Recharts are fetched only when Stats is first opened.
+- Everything on the view except the sessions table comes from the progress store, which already holds the weeks, words per date, lifetime words, and achievements. The table reads the last 20 sessions when the view opens.
+- The weekly chart uses Recharts directly. The heatmap is a hand-rolled SVG; a day's shade is relative to the daily target if one is set, otherwise to a seventh of the weekly goal.
+- Achievement conditions are pure functions in `src/domain/achievements.ts`. `achievement-check.ts` evaluates them on every progress refresh, stores new unlocks, and shows a toast. An unlock is permanent: a streak that later ends does not remove its achievement.
 
 ## Settings
 
