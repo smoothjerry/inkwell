@@ -21,6 +21,7 @@ pub fn build(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
         )
     };
 
+    let palette = item("palette", "Command Palette…", Some("CmdOrCtrl+K"))?;
     let zen = item("zen", "Zen Mode", Some("CmdOrCtrl+Shift+F"))?;
     let typewriter = item(
         "typewriter",
@@ -51,10 +52,22 @@ pub fn build(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
     match existing_view {
         Some(view) => {
             let separator = PredefinedMenuItem::separator(app)?;
-            view.insert_items(&[&zen, &typewriter, &dimming, &separator], 0)?;
+            let palette_separator = PredefinedMenuItem::separator(app)?;
+            view.insert_items(
+                &[
+                    &palette,
+                    &palette_separator,
+                    &zen,
+                    &typewriter,
+                    &dimming,
+                    &separator,
+                ],
+                0,
+            )?;
         }
         None => {
-            let view = Submenu::with_items(app, "View", true, &[&zen, &typewriter, &dimming])?;
+            let view =
+                Submenu::with_items(app, "View", true, &[&palette, &zen, &typewriter, &dimming])?;
             menu.append(&view)?;
         }
     }

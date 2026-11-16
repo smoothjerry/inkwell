@@ -1,6 +1,7 @@
 import { isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useEffect } from "react";
+import { usePaletteStore } from "@/features/library";
 import { DIM_MODES, useSettingsStore } from "@/stores/settings-store";
 import { useViewStore } from "@/stores/view-store";
 
@@ -10,6 +11,11 @@ function runMenuAction(action: string) {
   const view = useViewStore.getState();
 
   switch (action) {
+    case "palette": {
+      const palette = usePaletteStore.getState();
+      palette.setOpen(!palette.isOpen);
+      break;
+    }
     case "zen":
       view.setZen(!view.isZen);
       break;

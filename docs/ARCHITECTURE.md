@@ -33,14 +33,14 @@ Inkwell is a Tauri 2 desktop app. A thin Rust shell hosts a webview that runs a 
 | UI kit | `src/components/ui/` | shadcn/ui components, copied into the repo. |
 | Styles | `src/styles/` | Design tokens (`tokens.css`) and global CSS (`globals.css`). |
 
-## Current state (M6)
+## Current state (M7)
 
-Storage, the library, the editor, sessions, goals, the streak, settings, onboarding, the stats view, and the focus features exist. Search and export do not yet.
+Storage, the library, search, the editor, sessions, goals, the streak, settings, onboarding, the stats view, and the focus features exist. Import and export do not yet.
 
 - `src-tauri/src/lib.rs` registers `tauri-plugin-sql` and the native menu (`menu.rs`). `migrations.rs` lists the migrations; the SQL is in `src-tauri/migrations/`.
 - `src/lib/db/` holds the connection (`client.ts`) and the folder, document, trash, settings, sessions, weeks, and achievements repositories.
-- `src/domain/` holds the pure logic, each file with unit tests beside it: `word-count.ts`, `sessions.ts`, `weeks.ts`, `streak.ts`, `achievements.ts`.
-- `src/features/library/` holds the library store and the sidebar components.
+- `src/domain/` holds the pure logic, each file with unit tests beside it: `word-count.ts`, `sessions.ts`, `weeks.ts`, `streak.ts`, `achievements.ts`. `search-query.ts` is also here; it has no tests yet.
+- `src/features/library/` holds the library store, the sidebar components, and the command palette.
 - `src/features/editor/` holds the Tiptap editor, autosave, the session tracker, the selection toolbar, the slash menu, and the status-bar word count.
 - `src/features/stats/` holds the progress store, the status-bar progress bar, streak, today ring, and celebration, and the Stats view.
 - `src/features/settings/` holds the Settings view and its controls.
@@ -113,9 +113,18 @@ Storage, the library, the editor, sessions, goals, the streak, settings, onboard
 
 ### Native menu
 
-- `src-tauri/src/menu.rs` starts from Tauri's default menu, so the standard app, Edit, and Window items keep working, and adds Zen Mode, Typewriter Scrolling, and a Dimming submenu to View.
+- `src-tauri/src/menu.rs` starts from Tauri's default menu, so the standard app, Edit, and Window items keep working, and adds Command Palette, Zen Mode, Typewriter Scrolling, and a Dimming submenu to View.
 - Choosing an item (or pressing its shortcut) emits a `menu` event with the action name. `src/app/use-menu-events.ts` maps the action to a store change. The action names must match in both files.
 - The items are plain items, not check items, so the menu does not show which modes are on.
+
+## Search and the command palette
+
+- Search uses the `documents_fts` FTS5 table, which triggers have kept in sync with `documents` since the first migration. `src/lib/db/search-repo.ts` ranks with `bm25`, weighting the title five times the body, and returns a `snippet` with the matches marked by two control characters.
+- `src/domain/search-query.ts` turns typed text into the MATCH expression: each word becomes a quoted prefix term and all must match. Quoting keeps FTS5 operators in the input from being interpreted.
+- `CommandPalette` (`src/features/library/command-palette.tsx`) is a Dialog around `cmdk` with cmdk's own filtering turned off. Documents are filtered by the database, 120 ms after the last keystroke; commands by a substring match on title and keywords. With nothing typed it shows the most recently updated documents.
+- Commands are a plain list in `commands.ts`. Each runs against the stores, the same way the menu actions do.
+- The palette opens from the sidebar's Search row and from the View menu's Command Palette item (Cmd/Ctrl+K).
+- On a database of 1,000 documents of 1,000 words each, the search statement took 3 to 4 ms in the `sqlite3` shell.
 
 ## Settings
 

@@ -1,6 +1,7 @@
 export * from "./achievements-repo";
 export * from "./documents-repo";
 export * from "./folders-repo";
+export * from "./search-repo";
 export * from "./sessions-repo";
 export * from "./settings-repo";
 export * from "./trash-repo";
