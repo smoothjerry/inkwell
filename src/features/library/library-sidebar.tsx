@@ -1,10 +1,13 @@
-import { FilePlus, FolderPlus } from "lucide-react";
+import { FilePlus, FolderPlus, Search } from "lucide-react";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { DocumentItem } from "./document-item";
 import { FolderItem } from "./folder-item";
 import { useLibraryStore } from "./library-store";
+import { usePaletteStore } from "./palette-store";
 import { TrashSection } from "./trash-section";
+
+const IS_MAC = navigator.userAgent.includes("Mac");
 
 const HEADING =
   "px-2 pt-3 pb-1 text-[11px] font-medium text-muted-foreground uppercase tracking-wide";
@@ -51,6 +54,18 @@ export function LibrarySidebar({ footer }: LibrarySidebarProps) {
         >
           <FolderPlus className="size-4" strokeWidth={1.5} aria-hidden="true" />
         </Button>
+      </div>
+
+      <div className="shrink-0 px-2 pb-1">
+        <button
+          type="button"
+          className="flex h-7 w-full items-center gap-1.5 rounded-md border bg-background px-2 text-left text-muted-foreground outline-none hover:border-border-strong focus-visible:ring-2 focus-visible:ring-ring"
+          onClick={() => usePaletteStore.getState().setOpen(true)}
+        >
+          <Search className="size-3.5 shrink-0" strokeWidth={1.5} aria-hidden="true" />
+          <span className="flex-1">Search</span>
+          <kbd className="font-mono text-[11px]">{IS_MAC ? "⌘K" : "Ctrl K"}</kbd>
+        </button>
       </div>
 
       <nav className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
