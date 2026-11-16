@@ -47,7 +47,9 @@ ${toHtmlFragment(content)}
 `;
 }
 
-/** The document body as plain text, with a blank line between blocks. */
+/** The document body as plain text, with one blank line between blocks. */
 export function toPlainText(content: JSONContent): string {
-  return `${generateText(content, createEditorExtensions(), { blockSeparator: "\n\n" }).trim()}\n`;
+  const text = generateText(content, createEditorExtensions(), { blockSeparator: "\n\n" });
+  // Nested blocks (list items) produce runs of separators; keep one blank line.
+  return `${text.replace(/\n{3,}/g, "\n\n").trim()}\n`;
 }
