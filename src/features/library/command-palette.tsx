@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { toFtsQuery } from "@/domain/search-query";
 import { type SearchResult, searchDocuments } from "@/lib/db";
-import { filterCommands } from "./commands";
+import { COMMANDS, filterCommands, type Command as PaletteCommand } from "./commands";
 import { useLibraryStore } from "./library-store";
 import { usePaletteStore } from "./palette-store";
 import { SearchSnippet } from "./search-snippet";
@@ -28,7 +28,12 @@ const MAX_RESULTS = 20;
 const RECENT_DOCUMENTS = 6;
 
 /** The ⌘K palette: full-text document search plus commands (DESIGN_SPEC §7.2). */
-export function CommandPalette() {
+type CommandPaletteProps = {
+  /** Commands from other features, listed after the built-in ones. */
+  extraCommands?: PaletteCommand[];
+};
+
+export function CommandPalette({ extraCommands = [] }: CommandPaletteProps) {
   const isOpen = usePaletteStore((state) => state.isOpen);
   const setOpen = usePaletteStore((state) => state.setOpen);
   const documents = useLibraryStore((state) => state.documents);
@@ -75,7 +80,7 @@ export function CommandPalette() {
       .sort((a, b) => b.updatedAt - a.updatedAt)
       .slice(0, RECENT_DOCUMENTS)
       .map((doc) => ({ id: doc.id, title: doc.title, snippet: "" }));
-  const commands = filterCommands(query);
+  const commands = filterCommands([...COMMANDS, ...extraCommands], query);
 
   /** Closes the palette first, so focus is back in the app when the action runs. */
   function choose(action: () => void) {

@@ -1,0 +1,123 @@
+/* PDF export: only #print-root is printed. See features/export/print-document.ts. */
+
+#print-root {
+  display: none;
+}
+
+@media print {
+  @page {
+    margin: 1in;
+  }
+
+  html,
+  body {
+    height: auto;
+    overflow: visible;
+    background: #fff;
+  }
+
+  /* Must beat every screen rule, whatever its specificity. */
+  body > :not(#print-root) {
+    /* biome-ignore lint/complexity/noImportantStyles: see above. */
+    display: none !important;
+  }
+
+  #print-root {
+    display: block;
+    color: #000;
+    font-family: "Newsreader Variable", Georgia, "Times New Roman", serif;
+    font-size: 11pt;
+    line-height: 1.5;
+    user-select: text;
+  }
+
+  #print-root h1,
+  #print-root h2,
+  #print-root h3 {
+    margin: 1.4em 0 0.4em;
+    font-weight: 600;
+    line-height: 1.25;
+    break-after: avoid;
+  }
+
+  #print-root h1 {
+    font-size: 18pt;
+  }
+
+  #print-root h2 {
+    font-size: 14pt;
+  }
+
+  #print-root h3 {
+    font-size: 12pt;
+  }
+
+  #print-root > h1:first-child {
+    margin-top: 0;
+    font-size: 22pt;
+  }
+
+  #print-root p,
+  #print-root ul,
+  #print-root ol,
+  #print-root blockquote,
+  #print-root pre {
+    margin: 0.6em 0;
+  }
+
+  #print-root ul,
+  #print-root ol {
+    padding-left: 1.5em;
+  }
+
+  #print-root ul {
+    list-style: disc;
+  }
+
+  #print-root ol {
+    list-style: decimal;
+  }
+
+  #print-root ul[data-type="taskList"] {
+    padding-left: 0;
+    list-style: none;
+  }
+
+  #print-root ul[data-type="taskList"] li {
+    display: flex;
+    gap: 0.5em;
+  }
+
+  #print-root ul[data-type="taskList"] li > div > p {
+    margin: 0;
+  }
+
+  #print-root blockquote {
+    padding-left: 1em;
+    border-left: 2pt solid #999;
+  }
+
+  #print-root code,
+  #print-root pre {
+    font-family: "Geist Mono", Menlo, monospace;
+    font-size: 9.5pt;
+  }
+
+  #print-root pre {
+    padding: 0.6em 0.8em;
+    border: 0.5pt solid #999;
+    white-space: pre-wrap;
+    break-inside: avoid;
+  }
+
+  #print-root hr {
+    margin: 1.5em 0;
+    border: 0;
+    border-top: 0.5pt solid #999;
+  }
+
+  #print-root a {
+    color: inherit;
+    text-decoration: underline;
+  }
+}
