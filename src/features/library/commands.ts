@@ -99,10 +99,10 @@ export const COMMANDS: Command[] = [
   theme("system", "Theme: System", Monitor),
 ];
 
-/** Commands whose title or keywords contain the query. An empty query matches all. */
-export function filterCommands(query: string): Command[] {
+/** The commands in `commands` whose title or keywords contain the query. An empty query matches all. */
+export function filterCommands(commands: Command[], query: string): Command[] {
   const needle = query.trim().toLowerCase();
-  return COMMANDS.filter((command) =>
+  return commands.filter((command) =>
     `${command.title} ${command.keywords}`.toLowerCase().includes(needle),
   );
 }

@@ -33,11 +33,11 @@ Inkwell is a Tauri 2 desktop app. A thin Rust shell hosts a webview that runs a 
 | UI kit | `src/components/ui/` | shadcn/ui components, copied into the repo. |
 | Styles | `src/styles/` | Design tokens (`tokens.css`) and global CSS (`globals.css`). |
 
-## Current state (M7)
+## Current state (M8)
 
-Storage, the library, search, the editor, sessions, goals, the streak, settings, onboarding, the stats view, and the focus features exist. Import and export do not yet.
+Every feature in the design spec exists. What remains is the polish and release work of M9: window state, backups, an accessibility pass, performance budgets, and the release workflow.
 
-- `src-tauri/src/lib.rs` registers `tauri-plugin-sql` and the native menu (`menu.rs`). `migrations.rs` lists the migrations; the SQL is in `src-tauri/migrations/`.
+- `src-tauri/src/lib.rs` registers the SQL, dialog, and file-system plugins and the native menu (`menu.rs`). `migrations.rs` lists the migrations; the SQL is in `src-tauri/migrations/`.
 - `src/lib/db/` holds the connection (`client.ts`) and the folder, document, trash, settings, sessions, weeks, and achievements repositories.
 - `src/domain/` holds the pure logic, each file with unit tests beside it: `word-count.ts`, `sessions.ts`, `weeks.ts`, `streak.ts`, `achievements.ts`. `search-query.ts` is also here; it has no tests yet.
 - `src/features/library/` holds the library store, the sidebar components, and the command palette.
@@ -45,6 +45,7 @@ Storage, the library, search, the editor, sessions, goals, the streak, settings,
 - `src/features/stats/` holds the progress store, the status-bar progress bar, streak, today ring, and celebration, and the Stats view.
 - `src/features/settings/` holds the Settings view and its controls.
 - `src/features/onboarding/` holds the first-launch dialog and the Welcome document.
+- `src/features/export/` holds the format converters, Markdown import, PDF printing, and the export dialog.
 - `src/stores/` holds the two app-wide stores: settings (read from SQLite) and the current view (`editor`, `stats`, or `settings`; there is no router).
 
 ## Storage
@@ -113,7 +114,7 @@ Storage, the library, search, the editor, sessions, goals, the streak, settings,
 
 ### Native menu
 
-- `src-tauri/src/menu.rs` starts from Tauri's default menu, so the standard app, Edit, and Window items keep working, and adds Command Palette, Zen Mode, Typewriter Scrolling, and a Dimming submenu to View.
+- `src-tauri/src/menu.rs` starts from Tauri's default menu, so the standard app, Edit, and Window items keep working, and adds Import Markdown and Export to File, and Command Palette, Zen Mode, Typewriter Scrolling, and a Dimming submenu to View.
 - Choosing an item (or pressing its shortcut) emits a `menu` event with the action name. `src/app/use-menu-events.ts` maps the action to a store change. The action names must match in both files.
 - The items are plain items, not check items, so the menu does not show which modes are on.
 
@@ -125,6 +126,18 @@ Storage, the library, search, the editor, sessions, goals, the streak, settings,
 - Commands are a plain list in `commands.ts`. Each runs against the stores, the same way the menu actions do.
 - The palette opens from the sidebar's Search row and from the View menu's Command Palette item (Cmd/Ctrl+K).
 - On a database of 1,000 documents of 1,000 words each, the search statement took 3 to 4 ms in the `sqlite3` shell.
+
+## Import and export
+
+- All conversion starts from a document's stored Tiptap JSON, not from a mounted editor, so any document can be exported, not only the open one. Pending edits are autosaved first.
+- **Markdown** (`markdown.ts`) uses `@tiptap/markdown`'s `MarkdownManager` with the editor's own extensions, in both directions. A unit test checks that every block type and mark survives a round trip.
+- **HTML and plain text** (`html.ts`) use Tiptap's `generateHTML` and `generateText`. The HTML file is standalone, with a small embedded stylesheet.
+- **Word** (`docx.ts`) walks the JSON and builds the file with the `docx` library, which is imported only when a Word export runs.
+- **PDF** (`print-document.ts`) renders the document into `#print-root`, which only the print stylesheet (`src/styles/print.css`) shows, and calls `window.print()`. The user saves as PDF from the system dialog.
+- Markdown and plain text contain the body only, with the title as the file name; that keeps a Markdown round trip clean. HTML, Word, and PDF start with the title as a heading.
+- **Import** (`import-markdown.ts`) makes one document per chosen file, titled with the file name, in the folder of the open document or at the top level.
+- Files are chosen with the Tauri dialog plugin and read or written with the file-system plugin. The capability grants read and write commands with no path scope of its own; a path becomes accessible only when the user picks it in a dialog.
+- The export dialog opens when `exportDocumentId` is set in the view store. That is how the library's context menu asks for an export without importing the export feature, which itself depends on the library.
 
 ## Settings
 
@@ -145,7 +158,7 @@ Geist Sans and Geist Mono are loaded with `@font-face` from the `geist` npm pack
 
 ## Security
 
-- The Tauri capability in `src-tauri/capabilities/default.json` grants the main window the core defaults, window dragging and closing, and SQL access.
+- The Tauri capability in `src-tauri/capabilities/default.json` grants the main window the core defaults, window dragging and closing, printing, SQL access, the open and save dialogs, and file reads and writes for paths chosen in those dialogs.
 - A content security policy in `src-tauri/tauri.conf.json` restricts the webview to the app's own assets.
 
 ## Quality gates

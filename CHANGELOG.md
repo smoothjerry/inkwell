@@ -33,6 +33,8 @@ All notable changes to this project are documented here. The format follows [Kee
 - Focus features (M6): zen mode, typewriter scrolling, and sentence or paragraph dimming.
 - A native View menu with shortcuts for the focus features.
 - Search and command palette (M7): full-text search across documents and a list of commands, opened with Cmd/Ctrl+K or the sidebar's Search row.
+- Import and export (M8): import Markdown files; export a document as Markdown, Word, HTML, plain text, or PDF.
+- A File menu with Import Markdown and Export (Cmd/Ctrl+Shift+E), and Export in a document's right-click menu.
 
 ### Changed
 

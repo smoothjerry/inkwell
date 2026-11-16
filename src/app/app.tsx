@@ -1,6 +1,7 @@
 import { Suspense, useEffect } from "react";
 import { Toaster } from "sonner";
 import { EditorPane, subscribeToSessionWrites, WordCountStatus } from "@/features/editor";
+import { EXPORT_COMMANDS, ExportDialog } from "@/features/export";
 import { CommandPalette, LibrarySidebar, useLibraryStore } from "@/features/library";
 import { OnboardingDialog } from "@/features/onboarding";
 import { SettingsView } from "@/features/settings";
@@ -85,7 +86,8 @@ export function App() {
       </footer>
 
       {isZen && <ZenProgressLine />}
-      <CommandPalette />
+      <CommandPalette extraCommands={EXPORT_COMMANDS} />
+      <ExportDialog />
       <OnboardingDialog />
       <Toaster theme={theme} position="bottom-right" />
     </div>

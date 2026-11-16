@@ -1,11 +1,12 @@
 import { isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useEffect } from "react";
+import { importMarkdownFiles, requestExport } from "@/features/export";
 import { usePaletteStore } from "@/features/library";
 import { DIM_MODES, useSettingsStore } from "@/stores/settings-store";
 import { useViewStore } from "@/stores/view-store";
 
-/** Runs a View menu action. The names match the ids in src-tauri/src/menu.rs. */
+/** Runs a native menu action. The names match the ids in src-tauri/src/menu.rs. */
 function runMenuAction(action: string) {
   const settings = useSettingsStore.getState();
   const view = useViewStore.getState();
@@ -16,6 +17,12 @@ function runMenuAction(action: string) {
       palette.setOpen(!palette.isOpen);
       break;
     }
+    case "import":
+      void importMarkdownFiles();
+      break;
+    case "export":
+      requestExport();
+      break;
     case "zen":
       view.setZen(!view.isZen);
       break;

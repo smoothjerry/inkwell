@@ -1,4 +1,4 @@
-import { FileText, Pencil, Pin, PinOff, Trash2 } from "lucide-react";
+import { Download, FileText, Pencil, Pin, PinOff, Trash2 } from "lucide-react";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/context-menu";
 import type { DocumentSummary } from "@/lib/db";
 import { cn } from "@/lib/utils";
+import { useViewStore } from "@/stores/view-store";
 import { InlineRenameInput } from "./inline-rename-input";
 import { useLibraryStore } from "./library-store";
 import { moveTargets } from "./move-targets";
@@ -88,6 +89,10 @@ export function DocumentItem({ doc, depth, section = "tree" }: DocumentItemProps
           currentId={doc.folderId}
           onMove={(folderId) => actions.moveDocument(doc.id, folderId)}
         />
+        <ContextMenuItem onSelect={() => useViewStore.getState().setExportDocumentId(doc.id)}>
+          <Download strokeWidth={1.5} aria-hidden="true" />
+          Export…
+        </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem variant="destructive" onSelect={() => actions.trashDocument(doc.id)}>
           <Trash2 strokeWidth={1.5} aria-hidden="true" />
