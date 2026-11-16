@@ -11,6 +11,8 @@ pub fn run() {
                 .add_migrations(migrations::DB_URL, migrations::migrations())
                 .build(),
         )
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_fs::init())
         .menu(menu::build)
         .on_menu_event(menu::handle_event)
         .run(tauri::generate_context!())
