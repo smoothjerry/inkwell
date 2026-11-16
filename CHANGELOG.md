@@ -32,6 +32,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - Unit tests for achievement rules.
 - Focus features (M6): zen mode, typewriter scrolling, and sentence or paragraph dimming.
 - A native View menu with shortcuts for the focus features.
+- Search and command palette (M7): full-text search across documents and a list of commands, opened with Cmd/Ctrl+K or the sidebar's Search row.
 
 ### Changed
 
