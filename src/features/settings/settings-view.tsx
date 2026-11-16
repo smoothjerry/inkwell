@@ -1,5 +1,11 @@
 import { useProgressStore } from "@/features/stats";
-import { EDITOR_FONTS, EDITOR_WIDTHS, THEMES, useSettingsStore } from "@/stores/settings-store";
+import {
+  DIM_MODES,
+  EDITOR_FONTS,
+  EDITOR_WIDTHS,
+  THEMES,
+  useSettingsStore,
+} from "@/stores/settings-store";
 import { GoalFields } from "./goal-fields";
 import { NumberField } from "./number-field";
 import { SegmentedControl } from "./segmented-control";
@@ -65,6 +71,29 @@ export function SettingsView() {
           <h2 id="settings-writing" className={SECTION_HEADING}>
             Writing
           </h2>
+          <SettingRow
+            title="Typewriter scrolling"
+            description="Keeps the line you are writing near the middle of the window."
+          >
+            <input
+              type="checkbox"
+              aria-label="Typewriter scrolling"
+              className="mt-1 size-3.5 accent-foreground"
+              checked={settings.typewriterMode}
+              onChange={(event) => settings.update({ typewriterMode: event.currentTarget.checked })}
+            />
+          </SettingRow>
+          <SettingRow
+            title="Dimming"
+            description="Fades everything except the sentence or paragraph you are writing."
+          >
+            <SegmentedControl
+              label="Dimming"
+              options={DIM_MODES}
+              value={settings.dimMode}
+              onChange={(dimMode) => settings.update({ dimMode })}
+            />
+          </SettingRow>
           <SettingRow
             title="Celebrations"
             description="A short animation when you reach your weekly goal."

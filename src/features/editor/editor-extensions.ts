@@ -2,7 +2,9 @@ import { TaskItem, TaskList } from "@tiptap/extension-list";
 import { Typography } from "@tiptap/extension-typography";
 import { Placeholder } from "@tiptap/extensions";
 import { StarterKit } from "@tiptap/starter-kit";
+import { FocusDimming } from "./focus-dimming";
 import { SlashCommand } from "./slash-command";
+import { TypewriterScroll } from "./typewriter-scroll";
 
 /**
  * The one place the editor's extensions are assembled (DESIGN_SPEC §4.4), so
@@ -20,5 +22,7 @@ export function createEditorExtensions() {
     TaskItem.configure({ nested: true }),
     Placeholder.configure({ placeholder: "Start writing, or type / for blocks" }),
     SlashCommand,
+    TypewriterScroll,
+    FocusDimming,
   ];
 }

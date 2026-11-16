@@ -1,0 +1,59 @@
+/*
+ * Zen mode (DESIGN_SPEC §7.4). The sidebar and status bar leave the layout
+ * and wait just off the window's edges. A thin strip of each stays under the
+ * pointer's reach, so moving the mouse to an edge fades that part back in.
+ */
+
+.zen-edge {
+  position: fixed;
+  z-index: 40;
+  display: grid;
+  opacity: 0;
+  transition:
+    opacity 180ms ease-out,
+    transform 180ms ease-out;
+}
+
+.zen-edge:hover,
+.zen-edge:focus-within {
+  opacity: 1;
+  transform: none;
+}
+
+.zen-edge-left {
+  inset: 0 auto 0 0;
+  width: var(--sidebar-width);
+  transform: translateX(calc(12px - 100%));
+}
+
+.zen-edge-bottom {
+  inset: auto 0 0 0;
+  height: var(--status-bar-height);
+  transform: translateY(calc(100% - 10px));
+}
+
+/* The only chrome left in zen mode: weekly progress along the bottom edge. */
+.zen-progress {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 30;
+  height: 2px;
+  background: var(--border);
+}
+
+.zen-progress > div {
+  height: 100%;
+  background: var(--fg);
+  transition: width 200ms ease-out;
+}
+
+.zen-progress > div[data-met="true"] {
+  background: var(--success);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zen-edge,
+  .zen-progress > div {
+    transition: none;
+  }
+}

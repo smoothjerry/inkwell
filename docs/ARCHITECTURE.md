@@ -33,11 +33,11 @@ Inkwell is a Tauri 2 desktop app. A thin Rust shell hosts a webview that runs a 
 | UI kit | `src/components/ui/` | shadcn/ui components, copied into the repo. |
 | Styles | `src/styles/` | Design tokens (`tokens.css`) and global CSS (`globals.css`). |
 
-## Current state (M5)
+## Current state (M6)
 
-Storage, the library, the editor, sessions, goals, the streak, settings, onboarding, and the stats view exist. Focus modes, search, and export do not yet.
+Storage, the library, the editor, sessions, goals, the streak, settings, onboarding, the stats view, and the focus features exist. Search and export do not yet.
 
-- `src-tauri/src/lib.rs` registers `tauri-plugin-sql`. `migrations.rs` lists the migrations; the SQL is in `src-tauri/migrations/`.
+- `src-tauri/src/lib.rs` registers `tauri-plugin-sql` and the native menu (`menu.rs`). `migrations.rs` lists the migrations; the SQL is in `src-tauri/migrations/`.
 - `src/lib/db/` holds the connection (`client.ts`) and the folder, document, trash, settings, sessions, weeks, and achievements repositories.
 - `src/domain/` holds the pure logic, each file with unit tests beside it: `word-count.ts`, `sessions.ts`, `weeks.ts`, `streak.ts`, `achievements.ts`.
 - `src/features/library/` holds the library store and the sidebar components.
@@ -103,6 +103,19 @@ Storage, the library, the editor, sessions, goals, the streak, settings, onboard
 - Everything on the view except the sessions table comes from the progress store, which already holds the weeks, words per date, lifetime words, and achievements. The table reads the last 20 sessions when the view opens.
 - The weekly chart uses Recharts directly. The heatmap is a hand-rolled SVG; a day's shade is relative to the daily target if one is set, otherwise to a seventh of the weekly goal.
 - Achievement conditions are pure functions in `src/domain/achievements.ts`. `achievement-check.ts` evaluates them on every progress refresh, stores new unlocks, and shows a toast. An unlock is permanent: a streak that later ends does not remove its achievement.
+
+## Focus features
+
+- **Zen mode** is a flag in the view store, not a saved setting. In zen the sidebar and status bar leave the grid and sit just outside the window's left and bottom edges with a thin strip still reachable, so moving the pointer to an edge (or tabbing into them) fades them back in. This is CSS only (`src/styles/zen.css`). A 2 px weekly-progress line stays along the bottom, and Esc exits. The macOS window buttons stay visible.
+- **Typewriter scrolling** (`typewriter-scroll.ts`) is a ProseMirror plugin view. After the caret or document changes, and only for a collapsed selection in a focused editor, it scrolls the `.editor-scroll` container so the caret line sits at 45% of its height.
+- **Dimming** (`focus-dimming.ts`) is a ProseMirror plugin that adds the class `is-dimming` to the editor and one inline decoration, `editor-focus`, around the current sentence or paragraph. The CSS fades the text color to 30% and restores it inside the decoration. Sentences come from `Intl.Segmenter`.
+- Both plugins read their setting from the settings store when they run, so the editor is not rebuilt when a setting changes. `DocumentEditor` dispatches an empty transaction when `dimMode` changes to trigger a redraw.
+
+### Native menu
+
+- `src-tauri/src/menu.rs` starts from Tauri's default menu, so the standard app, Edit, and Window items keep working, and adds Zen Mode, Typewriter Scrolling, and a Dimming submenu to View.
+- Choosing an item (or pressing its shortcut) emits a `menu` event with the action name. `src/app/use-menu-events.ts` maps the action to a store change. The action names must match in both files.
+- The items are plain items, not check items, so the menu does not show which modes are on.
 
 ## Settings
 

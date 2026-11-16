@@ -5,10 +5,12 @@ import { getSettings, setSetting } from "@/lib/db";
 export const THEMES = ["system", "light", "dark"] as const;
 export const EDITOR_FONTS = ["sans", "serif", "mono"] as const;
 export const EDITOR_WIDTHS = ["narrow", "medium", "wide"] as const;
+export const DIM_MODES = ["off", "sentence", "paragraph"] as const;
 
 export type Theme = (typeof THEMES)[number];
 export type EditorFont = (typeof EDITOR_FONTS)[number];
 export type EditorWidth = (typeof EDITOR_WIDTHS)[number];
+export type DimMode = (typeof DIM_MODES)[number];
 
 /** Settings stored in the SQLite `settings` table (DESIGN_SPEC §5). */
 export type Settings = {
@@ -20,6 +22,10 @@ export type Settings = {
   weekStartsOn: number;
   editorFont: EditorFont;
   editorWidth: EditorWidth;
+  /** Keep the caret line near the middle of the window while writing. */
+  typewriterMode: boolean;
+  /** Fade everything except the current sentence or paragraph. */
+  dimMode: DimMode;
   celebrations: boolean;
   sessionIdleMinutes: number;
   /** Whether the first-launch setup has been completed. */
@@ -35,6 +41,8 @@ const DEFAULTS: Settings = {
   weekStartsOn: 1,
   editorFont: "sans",
   editorWidth: "medium",
+  typewriterMode: false,
+  dimMode: "off",
   celebrations: true,
   sessionIdleMinutes: 10,
   onboarded: false,
@@ -52,6 +60,8 @@ const VALIDATORS: { [Key in keyof Settings]: (value: unknown) => boolean } = {
     Number.isInteger(value) && (value as number) >= 0 && (value as number) <= 6,
   editorFont: (value) => EDITOR_FONTS.includes(value as EditorFont),
   editorWidth: (value) => EDITOR_WIDTHS.includes(value as EditorWidth),
+  typewriterMode: (value) => typeof value === "boolean",
+  dimMode: (value) => DIM_MODES.includes(value as DimMode),
   celebrations: (value) => typeof value === "boolean",
   sessionIdleMinutes: isPositiveInteger,
   onboarded: (value) => typeof value === "boolean",

@@ -4,6 +4,7 @@ export { useProgressStore } from "./progress-store";
 export { StreakBadge } from "./streak-badge";
 export { TodayRing } from "./today-ring";
 export { WeekProgress } from "./week-progress";
+export { ZenProgressLine } from "./zen-progress-line";
 
 /** The Stats view and its chart library load only when the view is first opened (§9). */
 export const StatsView = lazy(() =>
