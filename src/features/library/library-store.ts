@@ -33,6 +33,9 @@ type LibraryState = {
   trashFolder: (id: string) => Promise<void>;
   restoreDocument: (id: string) => Promise<void>;
   restoreFolder: (id: string) => Promise<void>;
+  deleteDocumentForever: (id: string) => Promise<void>;
+  /** Deletes a trashed folder and what was trashed with it. */
+  deleteFolderForever: (id: string) => Promise<void>;
   emptyTrash: () => Promise<void>;
 };
 
@@ -157,6 +160,12 @@ export const useLibraryStore = create<LibraryState>((set, get) => {
       mutate("Could not restore the document.", () => db.restoreDocument(id)),
 
     restoreFolder: (id) => mutate("Could not restore the folder.", () => db.restoreFolder(id)),
+
+    deleteDocumentForever: (id) =>
+      mutate("Could not delete the document.", () => db.deleteDocumentForever(id)),
+
+    deleteFolderForever: (id) =>
+      mutate("Could not delete the folder.", () => db.deleteFolderForever(id)),
 
     emptyTrash: async () => {
       await mutate("Could not empty the trash.", () => db.emptyTrash());
