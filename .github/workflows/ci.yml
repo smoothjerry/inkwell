@@ -28,8 +28,30 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
 
+  # The Rust jobs run only when the shell or this workflow changed. Hosted macOS
+  # runners are often short, and most changes are frontend-only.
+  changes:
+    name: Detect Rust changes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      rust: ${{ steps.filter.outputs.rust }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            rust:
+              - "src-tauri/**"
+              - ".github/workflows/ci.yml"
+
   rust:
     name: Rust (${{ matrix.os }})
+    needs: changes
+    if: needs.changes.outputs.rust == 'true'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
