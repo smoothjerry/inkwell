@@ -13,6 +13,7 @@ import {
 import { FileText, Folder } from "lucide-react";
 import type { ReactNode, RefObject } from "react";
 import { type DropTarget, dropZone, planDrop, type TreeItem } from "@/domain/library-order";
+import { useSettingsStore } from "@/stores/settings-store";
 import { type DraggedItem, useDragStore } from "./drag-store";
 import { useLibraryStore } from "./library-store";
 
@@ -60,7 +61,11 @@ function targetFor(
   if (event.over) {
     const row = event.over.data.current as DropRowData;
     const ratio = (y - event.over.rect.top) / event.over.rect.height;
-    target = { kind: row.kind, id: row.id, zone: dropZone(dragged.kind, row.kind, ratio) };
+    // Outside manual sort, a position between rows would not hold, so rows
+    // only take drops into folders.
+    const isManual = useSettingsStore.getState().librarySort === "manual";
+    const zone = isManual ? dropZone(dragged.kind, row.kind, ratio) : "inside";
+    target = { kind: row.kind, id: row.id, zone };
   } else {
     const box = root?.getBoundingClientRect();
     if (!box || x < box.left || x > box.right || y < box.top || y > box.bottom) {

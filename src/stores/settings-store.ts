@@ -1,5 +1,6 @@
 import { toast } from "sonner";
 import { create } from "zustand";
+import { LIBRARY_SORTS, type LibrarySort } from "@/domain/library-sort";
 import { getSettings, setSetting } from "@/lib/db";
 
 export const THEMES = ["system", "light", "dark"] as const;
@@ -36,6 +37,8 @@ export type Settings = {
   sidebarCollapsed: boolean;
   /** Sidebar width in px, from SIDEBAR_WIDTH_MIN to SIDEBAR_WIDTH_MAX. */
   sidebarWidth: number;
+  /** How the library sidebar orders folders and documents. */
+  librarySort: LibrarySort;
   sessionIdleMinutes: number;
   /** Whether the first-launch setup has been completed. */
   onboarded: boolean;
@@ -55,6 +58,7 @@ const DEFAULTS: Settings = {
   celebrations: true,
   sidebarCollapsed: false,
   sidebarWidth: SIDEBAR_WIDTH_DEFAULT,
+  librarySort: "manual",
   sessionIdleMinutes: 10,
   onboarded: false,
   lastCelebratedWeek: null,
@@ -79,6 +83,7 @@ const VALIDATORS: { [Key in keyof Settings]: (value: unknown) => boolean } = {
     Number.isInteger(value) &&
     (value as number) >= SIDEBAR_WIDTH_MIN &&
     (value as number) <= SIDEBAR_WIDTH_MAX,
+  librarySort: (value) => LIBRARY_SORTS.includes(value as LibrarySort),
   sessionIdleMinutes: isPositiveInteger,
   onboarded: (value) => typeof value === "boolean",
   lastCelebratedWeek: (value) => value === null || typeof value === "string",
