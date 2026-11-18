@@ -2,7 +2,7 @@
 
 > **Working name:** "Inkwell" is a placeholder. Find/replace `Inkwell` / `inkwell` before the first commit if you rename it.
 > **Audience:** This document is the build brief for an AI coding session (Fable). It is prescriptive where decisions were made and marks open items explicitly.
-> **Status:** Draft v1 · 2026-11-09
+> **Status:** Draft v1.1 · 2026-11-17. M0–M8 are built. v1.1 moves the features that earlier milestones specified but did not deliver into M9 (§11.1), adds single-item permanent delete (§7.2), and records the focus shortcuts added in M6 (§7.7).
 
 ---
 
@@ -273,7 +273,7 @@ Evaluate after each count update (cheap checks) and on app start. Unlock is idem
 
 ### 7.2 Library
 - Nested folders, drag-and-drop docs and folders (dnd-kit), rename inline (double-click/F2), context menu (Radix).
-- Pin docs; Trash (soft delete, restore, empty, 30-day auto purge).
+- Pin docs; Trash (soft delete, restore, delete one item permanently after confirmation, empty, 30-day auto purge).
 - Sort: manual (default), updated, title.
 - Full-text search via FTS5 in the ⌘K palette (docs + commands).
 
@@ -312,6 +312,8 @@ Evaluate after each count update (cheap checks) and on app start. Unlock is idem
 | Command palette | ⌘K |
 | Toggle sidebar | ⌘\ |
 | Zen mode | ⌘⇧F |
+| Typewriter scrolling | ⌘⇧T |
+| Next dimming mode (off → sentence → paragraph) | ⌘⇧D |
 | Stats / Settings | ⌘⇧S / ⌘, |
 | Export | ⌘⇧E |
 | Find in doc | ⌘F |
@@ -429,7 +431,39 @@ inkwell/
 | M6 | **Focus features** — zen mode, typewriter scrolling, sentence/paragraph dimming | All toggleable via menu + shortcuts |
 | M7 | **Search + ⌘K** — FTS5, command palette with docs + commands | Search across 1k docs < 50 ms |
 | M8 | **Import/export** — MD import; MD/DOCX/HTML/TXT/PDF export | Round-trip MD preserves structure |
-| M9 | **Polish + release** — native menu, window state, backups, a11y pass, perf budgets, release workflow producing signed-ready artifacts | Tagged build produces installers for 3 OSes |
+| M9 | **Completion + release** — features carried over from M1–M8, then native menu, window state, backups, a11y pass, perf budgets, release workflow producing signed-ready artifacts. Full list in §11.1 | Every §11.1 item meets its "done when"; a tagged build produces installers for 3 OSes |
+
+### 11.1 M9 scope
+
+M9 has two parts. Part A finishes features that earlier milestones specified but did not deliver. Part B is the original polish and release work. Build Part A first, so that the accessibility pass and performance checks in Part B cover the finished app. Each row is small enough for its own PR.
+
+**Part A: carried over from M1–M8**
+
+| Item | From | Done when |
+|---|---|---|
+| Collapsible sidebar | §7.1 | ⌘\ hides and shows the sidebar; the state persists across restarts |
+| Resizable sidebar | §7.1 | Dragging the sidebar's edge resizes it between 200 and 400 px; the width persists |
+| Keyboard shortcuts | §7.7 | Every shortcut in §7.7 works and appears next to its item in the native menu |
+| Find in document | §7.7 | ⌘F opens a find bar over the editor that highlights every match, steps through them with Enter and ⇧Enter, shows "3 of 12", and closes with Esc |
+| Drag-and-drop | §7.2 | Documents and folders can be dragged to reorder and to move into another folder (dnd-kit); a folder cannot be dropped into itself or a descendant; order persists through `sort_order` |
+| Sort modes | §7.2 | The sidebar offers manual (default), last updated, and title order; the choice persists |
+| Delete one item permanently | §7.2 (added in v1.1) | A trashed document or folder can be deleted on its own after a confirmation that says it cannot be undone |
+| Word-count cache | §6.1 | Documents over 20k words reuse per-top-level-node counts and recount only changed nodes; counting a one-word edit in a 50k-word doc stays within the §9 keystroke budget |
+| File logging | §10.2 | `tauri-plugin-log` writes warnings and errors to a log file in the app's log directory |
+| Repository templates | §10.1 | `.github/ISSUE_TEMPLATE/bug.yml`, `.github/ISSUE_TEMPLATE/feature.yml`, and `.github/pull_request_template.md` exist |
+
+**Part B: polish and release**
+
+| Item | From | Done when |
+|---|---|---|
+| Native menu | §7.7 | The app, File, Edit, View, Window, and Help menus are complete on macOS, with equivalents on Windows and Linux; View items show a check mark when their mode is on |
+| Window state | §3 | `tauri-plugin-window-state` restores the window's size and position |
+| Backups | §4.3 | On start, if the newest backup is over 24 h old, the database is copied to `backups/inkwell-YYYYMMDD.db`; only the newest 7 are kept |
+| Accessibility pass | §8 | Every control has an accessible name; focus is visible everywhere; the sidebar, palette, menus, and dialogs work by keyboard alone; text meets WCAG AA in both themes |
+| Performance budgets | §9 | Each §9 budget is measured and recorded in `docs/ARCHITECTURE.md`; any budget missed has a fix or a written reason. The editor, Stats, and export code load in separate chunks |
+| Release workflow | §10.1 | `release.yml` runs on a version tag and uses `tauri-action` to build unsigned installers for macOS, Windows, and Linux |
+
+Out of scope for M9: the component, end-to-end, and Rust migration tests listed in §12 have not been written; `tests/e2e/` arrives with the end-to-end test. Code signing, notarization, and auto-update stay in §13.
 
 ---
 
