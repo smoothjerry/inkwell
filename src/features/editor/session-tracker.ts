@@ -1,5 +1,6 @@
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { v7 as uuidv7 } from "uuid";
+import { countDocumentWords } from "@/domain/doc-word-count";
 import {
   endOfLocalDay,
   expireSession,
@@ -9,7 +10,6 @@ import {
   type Session,
   sessionWords,
 } from "@/domain/sessions";
-import { countWords } from "@/domain/word-count";
 import { deleteSession, saveSession, saveSessionDoc } from "@/lib/db";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useWordCountStore } from "./word-count-store";
@@ -59,10 +59,6 @@ function write(task: () => Promise<void>) {
     .catch((error: unknown) => console.error(error));
 }
 
-function plainText(doc: ProseMirrorNode): string {
-  return doc.textBetween(0, doc.content.size, "\n");
-}
-
 function saveActive(session: Session, documentId: string) {
   const doc = session.docs.find((entry) => entry.documentId === documentId);
   write(async () => {
@@ -109,7 +105,7 @@ export function flushWordCount() {
   const { documentId, doc } = uncounted;
   uncounted = null;
 
-  const words = countWords(plainText(doc));
+  const words = countDocumentWords(doc);
   knownCounts.set(documentId, words);
   useWordCountStore.setState({ documentWords: words });
   if (active) {
@@ -120,7 +116,7 @@ export function flushWordCount() {
 
 /** Call when a document is opened, so its starting word count is known. */
 export function trackDocumentOpened(documentId: string, doc: ProseMirrorNode) {
-  const words = countWords(plainText(doc));
+  const words = countDocumentWords(doc);
   knownCounts.set(documentId, words);
   useWordCountStore.setState({ documentWords: words, selectionWords: null });
 }

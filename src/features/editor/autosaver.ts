@@ -1,6 +1,6 @@
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { toast } from "sonner";
-import { countWords } from "@/domain/word-count";
+import { countDocumentWords } from "@/domain/doc-word-count";
 import { saveDocumentContent } from "@/lib/db";
 
 const IDLE_MS = 500;
@@ -28,7 +28,7 @@ async function save(documentId: string, doc: ProseMirrorNode): Promise<void> {
     documentId,
     JSON.stringify(doc.toJSON()),
     plainText,
-    countWords(plainText),
+    countDocumentWords(doc),
   );
 }
 
