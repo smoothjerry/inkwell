@@ -13,6 +13,7 @@ import { InlineRenameInput } from "./inline-rename-input";
 import { useLibraryStore } from "./library-store";
 import { moveTargets } from "./move-targets";
 import { MoveToSubmenu } from "./move-to-submenu";
+import { useTreeRowDnd } from "./use-tree-row-dnd";
 
 type FolderItemProps = {
   folder: FolderRecord;
@@ -26,6 +27,13 @@ export function FolderItem({ folder, depth }: FolderItemProps) {
   const isCollapsed = useLibraryStore((state) => state.collapsedFolderIds.includes(folder.id));
   const isRenaming = useLibraryStore((state) => state.renamingId === folder.id);
   const actions = useLibraryStore.getState();
+  const dnd = useTreeRowDnd({
+    kind: "folder",
+    id: folder.id,
+    parentId: folder.parentId,
+    sortOrder: folder.sortOrder,
+    label: folder.name,
+  });
 
   const childFolders = folders.filter((child) => child.parentId === folder.id);
   const childDocuments = documents.filter((doc) => doc.folderId === folder.id);
@@ -65,8 +73,14 @@ export function FolderItem({ folder, depth }: FolderItemProps) {
         <ContextMenu>
           <ContextMenuTrigger asChild>
             <button
+              ref={dnd.ref}
+              {...dnd.listeners}
               type="button"
-              className="flex h-7 w-full items-center gap-1.5 rounded-md pr-2 text-left outline-none hover:bg-border/60 focus-visible:ring-2 focus-visible:ring-ring"
+              className={cn(
+                "relative flex h-7 w-full items-center gap-1.5 rounded-md pr-2 text-left outline-none hover:bg-border/60 focus-visible:ring-2 focus-visible:ring-ring",
+                dnd.isDragging && "opacity-40",
+                dnd.zone === "inside" && "bg-ring/15 ring-1 ring-ring",
+              )}
               style={indent}
               aria-expanded={!isCollapsed}
               onClick={() => actions.toggleFolder(folder.id)}
@@ -79,6 +93,16 @@ export function FolderItem({ folder, depth }: FolderItemProps) {
             >
               {icons}
               <span className="truncate">{folder.name}</span>
+              {(dnd.zone === "before" || dnd.zone === "after") && (
+                <span
+                  className={cn(
+                    "pointer-events-none absolute right-1 h-0.5 rounded-full bg-ring",
+                    dnd.zone === "before" ? "-top-px" : "-bottom-px",
+                  )}
+                  style={{ left: indent.paddingLeft }}
+                  aria-hidden="true"
+                />
+              )}
             </button>
           </ContextMenuTrigger>
           <ContextMenuContent onCloseAutoFocus={(event) => event.preventDefault()}>

@@ -25,8 +25,9 @@ type LibraryState = {
   createFolder: (parentId: string | null) => Promise<void>;
   renameDocument: (id: string, title: string) => Promise<void>;
   renameFolder: (id: string, name: string) => Promise<void>;
-  moveDocument: (id: string, folderId: string | null) => Promise<void>;
-  moveFolder: (id: string, parentId: string | null) => Promise<void>;
+  /** Without a `sortOrder`, the item goes to the end of its new parent. */
+  moveDocument: (id: string, folderId: string | null, sortOrder?: number | null) => Promise<void>;
+  moveFolder: (id: string, parentId: string | null, sortOrder?: number | null) => Promise<void>;
   setDocumentPinned: (id: string, pinned: boolean) => Promise<void>;
   trashDocument: (id: string) => Promise<void>;
   trashFolder: (id: string) => Promise<void>;
@@ -131,15 +132,15 @@ export const useLibraryStore = create<LibraryState>((set, get) => {
     renameFolder: (id, name) =>
       mutate("Could not rename the folder.", () => db.renameFolder(id, name)),
 
-    moveDocument: (id, folderId) =>
+    moveDocument: (id, folderId, sortOrder = null) =>
       mutate("Could not move the document.", async () => {
-        await db.moveDocument(id, folderId);
+        await db.moveDocument(id, folderId, sortOrder);
         expand(folderId);
       }),
 
-    moveFolder: (id, parentId) =>
+    moveFolder: (id, parentId, sortOrder = null) =>
       mutate("Could not move the folder.", async () => {
-        await db.moveFolder(id, parentId);
+        await db.moveFolder(id, parentId, sortOrder);
         expand(parentId);
       }),
 
