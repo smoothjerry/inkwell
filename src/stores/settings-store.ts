@@ -27,6 +27,8 @@ export type Settings = {
   /** Fade everything except the current sentence or paragraph. */
   dimMode: DimMode;
   celebrations: boolean;
+  /** Whether the library sidebar is hidden (⌘\). */
+  sidebarCollapsed: boolean;
   sessionIdleMinutes: number;
   /** Whether the first-launch setup has been completed. */
   onboarded: boolean;
@@ -44,6 +46,7 @@ const DEFAULTS: Settings = {
   typewriterMode: false,
   dimMode: "off",
   celebrations: true,
+  sidebarCollapsed: false,
   sessionIdleMinutes: 10,
   onboarded: false,
   lastCelebratedWeek: null,
@@ -63,6 +66,7 @@ const VALIDATORS: { [Key in keyof Settings]: (value: unknown) => boolean } = {
   typewriterMode: (value) => typeof value === "boolean",
   dimMode: (value) => DIM_MODES.includes(value as DimMode),
   celebrations: (value) => typeof value === "boolean",
+  sidebarCollapsed: (value) => typeof value === "boolean",
   sessionIdleMinutes: isPositiveInteger,
   onboarded: (value) => typeof value === "boolean",
   lastCelebratedWeek: (value) => value === null || typeof value === "string",
