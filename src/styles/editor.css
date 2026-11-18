@@ -226,3 +226,19 @@
 .editor-column[data-typewriter="true"] {
   padding-bottom: 60vh;
 }
+
+/*
+ * Find in document (features/editor/find-in-document.ts): a faint tint of the
+ * text colour on every match, a stronger one on the current match. Matches
+ * stay readable while dimming is on.
+ */
+.editor-prose .find-match {
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--fg) 14%, transparent);
+  color: var(--fg);
+}
+
+.editor-prose .find-match-current {
+  background: color-mix(in srgb, var(--fg) 32%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--fg) 50%, transparent);
+}

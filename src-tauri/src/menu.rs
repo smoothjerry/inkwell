@@ -1,5 +1,5 @@
 //! The native menu bar. It starts from Tauri's default menu (app, Edit,
-//! Window, …) and adds Inkwell's own items to File and View, plus Settings
+//! Window, …) and adds Inkwell's own items to File, Edit and View, plus Settings
 //! (in the app menu on macOS, in File elsewhere). A chosen item is
 //! sent to the frontend as a `menu` event; see `src/app/use-menu-events.ts`.
 
@@ -89,6 +89,16 @@ pub fn build(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
         &[&palette, &stats, &sidebar, &zen, &typewriter, &dimming],
     )?;
 
+    // Find goes at the bottom of Edit, after the clipboard items.
+    let find = item("find", "Find…", Some("CmdOrCtrl+F"))?;
+    match find_submenu(&menu, "Edit")? {
+        Some(edit) => {
+            edit.append(&PredefinedMenuItem::separator(app)?)?;
+            edit.append(&find)?;
+        }
+        None => menu.append(&Submenu::with_items(app, "Edit", true, &[&find])?)?,
+    }
+
     Ok(menu)
 }
 
@@ -102,16 +112,20 @@ fn add_to_submenu(
     items: &[&dyn IsMenuItem<Wry>],
     items_if_new: &[&dyn IsMenuItem<Wry>],
 ) -> tauri::Result<()> {
-    let existing = menu.items()?.into_iter().find_map(|kind| match kind {
+    match find_submenu(menu, title)? {
+        Some(submenu) => submenu.insert_items(items, 0),
+        None => menu.append(&Submenu::with_items(app, title, true, items_if_new)?),
+    }
+}
+
+/// The default menu's submenu called `title`, if the platform has one.
+fn find_submenu(menu: &Menu<Wry>, title: &str) -> tauri::Result<Option<Submenu<Wry>>> {
+    Ok(menu.items()?.into_iter().find_map(|kind| match kind {
         MenuItemKind::Submenu(submenu) if submenu.text().is_ok_and(|text| text == title) => {
             Some(submenu)
         }
         _ => None,
-    });
-    match existing {
-        Some(submenu) => submenu.insert_items(items, 0),
-        None => menu.append(&Submenu::with_items(app, title, true, items_if_new)?),
-    }
+    }))
 }
 
 /// Forwards Inkwell's own menu items to the frontend.
