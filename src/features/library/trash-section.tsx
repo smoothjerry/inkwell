@@ -15,9 +15,15 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useLibraryStore } from "./library-store";
 
-/** Collapsible trash list at the bottom of the sidebar, with restore and empty. */
+/** Collapsible trash list at the bottom of the sidebar: restore, delete permanently, empty. */
 export function TrashSection() {
   const [isOpen, setIsOpen] = useState(false);
+  // The item waiting for "Delete permanently" to be confirmed.
+  const [pendingDelete, setPendingDelete] = useState<{
+    name: string;
+    isFolder: boolean;
+    remove: () => Promise<void>;
+  } | null>(null);
   const trashedFolders = useLibraryStore((state) => state.trashedFolders);
   const trashedDocuments = useLibraryStore((state) => state.trashedDocuments);
   const actions = useLibraryStore.getState();
@@ -28,13 +34,17 @@ export function TrashSection() {
       id: folder.id,
       name: folder.name,
       Icon: Folder,
+      isFolder: true,
       restore: () => actions.restoreFolder(folder.id),
+      remove: () => actions.deleteFolderForever(folder.id),
     })),
     ...trashedDocuments.map((doc) => ({
       id: doc.id,
       name: doc.title,
       Icon: FileText,
+      isFolder: false,
       restore: () => actions.restoreDocument(doc.id),
+      remove: () => actions.deleteDocumentForever(doc.id),
     })),
   ];
 
@@ -63,7 +73,7 @@ export function TrashSection() {
         <div className="max-h-48 overflow-y-auto">
           {count === 0 && <p className="px-2 py-1 text-muted-foreground">Trash is empty.</p>}
 
-          {items.map(({ id, name, Icon, restore }) => (
+          {items.map(({ id, name, Icon, isFolder, restore, remove }) => (
             <div key={id} className="flex h-7 items-center gap-1.5 pr-1 pl-7">
               <Icon
                 className="size-4 shrink-0 text-muted-foreground"
@@ -80,8 +90,46 @@ export function TrashSection() {
               >
                 <Undo2 className="size-3.5" strokeWidth={1.5} aria-hidden="true" />
               </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-6"
+                aria-label={`Delete ${name} permanently`}
+                onClick={() => setPendingDelete({ name, isFolder, remove })}
+              >
+                <Trash2 className="size-3.5" strokeWidth={1.5} aria-hidden="true" />
+              </Button>
             </div>
           ))}
+
+          <AlertDialog
+            open={pendingDelete !== null}
+            onOpenChange={(open) => {
+              if (!open) {
+                setPendingDelete(null);
+              }
+            }}
+          >
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete “{pendingDelete?.name}” permanently?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {pendingDelete?.isFolder
+                    ? "The folder and everything that was trashed with it will be deleted. This cannot be undone."
+                    : "The document will be deleted. This cannot be undone."}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  variant="destructive"
+                  onClick={() => void pendingDelete?.remove()}
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
 
           {count > 0 && (
             <AlertDialog>
