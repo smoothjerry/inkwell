@@ -1,11 +1,14 @@
 import { FilePlus, FolderPlus, Search } from "lucide-react";
 import { type ReactNode, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { sortLibraryItems } from "@/domain/library-sort";
+import { useSettingsStore } from "@/stores/settings-store";
 import { DocumentItem } from "./document-item";
 import { FolderItem } from "./folder-item";
 import { LibraryDragContext } from "./library-drag-context";
 import { useLibraryStore } from "./library-store";
 import { usePaletteStore } from "./palette-store";
+import { SortMenu } from "./sort-menu";
 import { TrashSection } from "./trash-section";
 
 const IS_MAC = navigator.userAgent.includes("Mac");
@@ -26,9 +29,24 @@ export function LibrarySidebar({ footer }: LibrarySidebarProps) {
   const actions = useLibraryStore.getState();
   const libraryRef = useRef<HTMLElement>(null);
 
-  const pinned = documents.filter((doc) => doc.pinned);
-  const rootFolders = folders.filter((folder) => folder.parentId === null);
-  const rootDocuments = documents.filter((doc) => doc.folderId === null);
+  const sort = useSettingsStore((state) => state.librarySort);
+
+  const byTitle = (doc: { title: string }) => doc.title;
+  const pinned = sortLibraryItems(
+    documents.filter((doc) => doc.pinned),
+    sort,
+    byTitle,
+  );
+  const rootFolders = sortLibraryItems(
+    folders.filter((folder) => folder.parentId === null),
+    sort,
+    (folder) => folder.name,
+  );
+  const rootDocuments = sortLibraryItems(
+    documents.filter((doc) => doc.folderId === null),
+    sort,
+    byTitle,
+  );
   const isEmpty = status === "ready" && folders.length === 0 && documents.length === 0;
 
   return (
@@ -83,7 +101,10 @@ export function LibrarySidebar({ footer }: LibrarySidebarProps) {
 
           {/* min-h-full: dropping anywhere below the last row means the top level. */}
           <section ref={libraryRef} aria-label="Documents" className="min-h-full">
-            <h2 className={HEADING}>Library</h2>
+            <div className="flex items-end justify-between pr-1">
+              <h2 className={HEADING}>Library</h2>
+              <SortMenu />
+            </div>
             {rootFolders.map((folder) => (
               <FolderItem key={folder.id} folder={folder} depth={0} />
             ))}

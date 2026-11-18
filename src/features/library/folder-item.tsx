@@ -6,8 +6,10 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
+import { sortLibraryItems } from "@/domain/library-sort";
 import type { Folder as FolderRecord } from "@/lib/db";
 import { cn } from "@/lib/utils";
+import { useSettingsStore } from "@/stores/settings-store";
 import { DocumentItem } from "./document-item";
 import { InlineRenameInput } from "./inline-rename-input";
 import { useLibraryStore } from "./library-store";
@@ -35,8 +37,17 @@ export function FolderItem({ folder, depth }: FolderItemProps) {
     label: folder.name,
   });
 
-  const childFolders = folders.filter((child) => child.parentId === folder.id);
-  const childDocuments = documents.filter((doc) => doc.folderId === folder.id);
+  const sort = useSettingsStore((state) => state.librarySort);
+  const childFolders = sortLibraryItems(
+    folders.filter((child) => child.parentId === folder.id),
+    sort,
+    (child) => child.name,
+  );
+  const childDocuments = sortLibraryItems(
+    documents.filter((doc) => doc.folderId === folder.id),
+    sort,
+    (doc) => doc.title,
+  );
   const indent = { paddingLeft: 8 + depth * 14 };
 
   const icons = (
