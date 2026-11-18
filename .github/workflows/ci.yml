@@ -49,7 +49,9 @@ jobs:
               - ".github/workflows/ci.yml"
 
   rust:
-    name: Rust (${{ matrix.os }})
+    # No matrix expression here: GitHub adds " (macos-latest)" etc. itself when
+    # the jobs run, and a skipped matrix would otherwise show the raw template.
+    name: Rust
     needs: changes
     if: needs.changes.outputs.rust == 'true'
     runs-on: ${{ matrix.os }}
