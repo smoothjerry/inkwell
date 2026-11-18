@@ -13,6 +13,7 @@ import { InlineRenameInput } from "./inline-rename-input";
 import { useLibraryStore } from "./library-store";
 import { moveTargets } from "./move-targets";
 import { MoveToSubmenu } from "./move-to-submenu";
+import { useTreeRowDnd } from "./use-tree-row-dnd";
 
 type DocumentItemProps = {
   doc: DocumentSummary;
@@ -27,6 +28,17 @@ export function DocumentItem({ doc, depth, section = "tree" }: DocumentItemProps
   const isRenaming = useLibraryStore((state) => state.renamingId === renameKey);
   const folders = useLibraryStore((state) => state.folders);
   const actions = useLibraryStore.getState();
+  // Rows in the Pinned section are shortcuts, not places in the tree.
+  const dnd = useTreeRowDnd(
+    {
+      kind: "document",
+      id: doc.id,
+      parentId: doc.folderId,
+      sortOrder: doc.sortOrder,
+      label: doc.title,
+    },
+    section === "tree",
+  );
 
   const indent = { paddingLeft: 8 + depth * 14 };
 
@@ -48,10 +60,13 @@ export function DocumentItem({ doc, depth, section = "tree" }: DocumentItemProps
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <button
+          ref={dnd.ref}
+          {...dnd.listeners}
           type="button"
           className={cn(
-            "flex h-7 w-full items-center gap-1.5 rounded-md pr-2 text-left outline-none hover:bg-border/60 focus-visible:ring-2 focus-visible:ring-ring",
+            "relative flex h-7 w-full items-center gap-1.5 rounded-md pr-2 text-left outline-none hover:bg-border/60 focus-visible:ring-2 focus-visible:ring-ring",
             isSelected && "bg-border text-foreground hover:bg-border",
+            dnd.isDragging && "opacity-40",
           )}
           style={indent}
           aria-current={isSelected ? "page" : undefined}
@@ -69,6 +84,16 @@ export function DocumentItem({ doc, depth, section = "tree" }: DocumentItemProps
             aria-hidden="true"
           />
           <span className="truncate">{doc.title}</span>
+          {(dnd.zone === "before" || dnd.zone === "after") && (
+            <span
+              className={cn(
+                "pointer-events-none absolute right-1 h-0.5 rounded-full bg-ring",
+                dnd.zone === "before" ? "-top-px" : "-bottom-px",
+              )}
+              style={{ left: indent.paddingLeft }}
+              aria-hidden="true"
+            />
+          )}
         </button>
       </ContextMenuTrigger>
       <ContextMenuContent onCloseAutoFocus={(event) => event.preventDefault()}>

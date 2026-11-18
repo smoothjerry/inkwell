@@ -59,14 +59,22 @@ export async function renameFolder(id: string, name: string): Promise<void> {
   ]);
 }
 
-/** Moves a folder. Moving it into itself or one of its descendants does nothing. */
-export async function moveFolder(id: string, parentId: string | null): Promise<void> {
+/**
+ * Moves a folder to `sortOrder` in `parentId`, or to the end of it when no
+ * order is given. Moving it into itself or one of its descendants does nothing.
+ */
+export async function moveFolder(
+  id: string,
+  parentId: string | null,
+  sortOrder: number | null = null,
+): Promise<void> {
   const db = await getDb();
   await db.execute(
     `${SUBTREE}
-     UPDATE folders SET parent_id = $2, sort_order = ${NEXT_SORT_ORDER}, updated_at = $3
+     UPDATE folders SET parent_id = $2, sort_order = COALESCE($4, ${NEXT_SORT_ORDER}),
+     updated_at = $3
      WHERE id = $1 AND ($2 IS NULL OR $2 NOT IN (SELECT id FROM subtree))`,
-    [id, parentId, Date.now()],
+    [id, parentId, Date.now(), sortOrder],
   );
 }
 

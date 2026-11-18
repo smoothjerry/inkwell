@@ -1,8 +1,9 @@
 import { FilePlus, FolderPlus, Search } from "lucide-react";
-import type { ReactNode } from "react";
+import { type ReactNode, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { DocumentItem } from "./document-item";
 import { FolderItem } from "./folder-item";
+import { LibraryDragContext } from "./library-drag-context";
 import { useLibraryStore } from "./library-store";
 import { usePaletteStore } from "./palette-store";
 import { TrashSection } from "./trash-section";
@@ -23,6 +24,7 @@ export function LibrarySidebar({ footer }: LibrarySidebarProps) {
   const folders = useLibraryStore((state) => state.folders);
   const documents = useLibraryStore((state) => state.documents);
   const actions = useLibraryStore.getState();
+  const libraryRef = useRef<HTMLElement>(null);
 
   const pinned = documents.filter((doc) => doc.pinned);
   const rootFolders = folders.filter((folder) => folder.parentId === null);
@@ -68,27 +70,30 @@ export function LibrarySidebar({ footer }: LibrarySidebarProps) {
         </button>
       </div>
 
-      <nav className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
-        {pinned.length > 0 && (
-          <section aria-label="Pinned">
-            <h2 className={HEADING}>Pinned</h2>
-            {pinned.map((doc) => (
-              <DocumentItem key={doc.id} doc={doc} depth={0} section="pinned" />
-            ))}
-          </section>
-        )}
+      <LibraryDragContext rootRef={libraryRef}>
+        <nav className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
+          {pinned.length > 0 && (
+            <section aria-label="Pinned">
+              <h2 className={HEADING}>Pinned</h2>
+              {pinned.map((doc) => (
+                <DocumentItem key={doc.id} doc={doc} depth={0} section="pinned" />
+              ))}
+            </section>
+          )}
 
-        <section aria-label="Documents">
-          <h2 className={HEADING}>Library</h2>
-          {rootFolders.map((folder) => (
-            <FolderItem key={folder.id} folder={folder} depth={0} />
-          ))}
-          {rootDocuments.map((doc) => (
-            <DocumentItem key={doc.id} doc={doc} depth={0} />
-          ))}
-          {isEmpty && <p className="px-2 py-1 text-muted-foreground">No documents yet.</p>}
-        </section>
-      </nav>
+          {/* min-h-full: dropping anywhere below the last row means the top level. */}
+          <section ref={libraryRef} aria-label="Documents" className="min-h-full">
+            <h2 className={HEADING}>Library</h2>
+            {rootFolders.map((folder) => (
+              <FolderItem key={folder.id} folder={folder} depth={0} />
+            ))}
+            {rootDocuments.map((doc) => (
+              <DocumentItem key={doc.id} doc={doc} depth={0} />
+            ))}
+            {isEmpty && <p className="px-2 py-1 text-muted-foreground">No documents yet.</p>}
+          </section>
+        </nav>
+      </LibraryDragContext>
 
       <TrashSection />
       {footer}

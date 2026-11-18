@@ -63,12 +63,18 @@ export async function renameDocument(id: string, title: string): Promise<void> {
   ]);
 }
 
-export async function moveDocument(id: string, folderId: string | null): Promise<void> {
+/** Moves a document to `sortOrder` in `folderId`, or to the end of it when no order is given. */
+export async function moveDocument(
+  id: string,
+  folderId: string | null,
+  sortOrder: number | null = null,
+): Promise<void> {
   const db = await getDb();
   await db.execute(
-    `UPDATE documents SET folder_id = $2, sort_order = ${NEXT_SORT_ORDER}, updated_at = $3
+    `UPDATE documents SET folder_id = $2, sort_order = COALESCE($4, ${NEXT_SORT_ORDER}),
+     updated_at = $3
      WHERE id = $1`,
-    [id, folderId, Date.now()],
+    [id, folderId, Date.now(), sortOrder],
   );
 }
 
