@@ -9,6 +9,7 @@
     "core:window:allow-destroy",
     "sql:default",
     "sql:allow-execute",
+    "log:default",
     "dialog:allow-open",
     "dialog:allow-save",
     "fs:allow-read-text-file",
