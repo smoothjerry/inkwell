@@ -7,6 +7,11 @@ export const EDITOR_FONTS = ["sans", "serif", "mono"] as const;
 export const EDITOR_WIDTHS = ["narrow", "medium", "wide"] as const;
 export const DIM_MODES = ["off", "sentence", "paragraph"] as const;
 
+/** Sidebar width limits in px (DESIGN_SPEC §7.1). */
+export const SIDEBAR_WIDTH_MIN = 200;
+export const SIDEBAR_WIDTH_MAX = 400;
+export const SIDEBAR_WIDTH_DEFAULT = 260;
+
 export type Theme = (typeof THEMES)[number];
 export type EditorFont = (typeof EDITOR_FONTS)[number];
 export type EditorWidth = (typeof EDITOR_WIDTHS)[number];
@@ -29,6 +34,8 @@ export type Settings = {
   celebrations: boolean;
   /** Whether the library sidebar is hidden (⌘\). */
   sidebarCollapsed: boolean;
+  /** Sidebar width in px, from SIDEBAR_WIDTH_MIN to SIDEBAR_WIDTH_MAX. */
+  sidebarWidth: number;
   sessionIdleMinutes: number;
   /** Whether the first-launch setup has been completed. */
   onboarded: boolean;
@@ -47,6 +54,7 @@ const DEFAULTS: Settings = {
   dimMode: "off",
   celebrations: true,
   sidebarCollapsed: false,
+  sidebarWidth: SIDEBAR_WIDTH_DEFAULT,
   sessionIdleMinutes: 10,
   onboarded: false,
   lastCelebratedWeek: null,
@@ -67,6 +75,10 @@ const VALIDATORS: { [Key in keyof Settings]: (value: unknown) => boolean } = {
   dimMode: (value) => DIM_MODES.includes(value as DimMode),
   celebrations: (value) => typeof value === "boolean",
   sidebarCollapsed: (value) => typeof value === "boolean",
+  sidebarWidth: (value) =>
+    Number.isInteger(value) &&
+    (value as number) >= SIDEBAR_WIDTH_MIN &&
+    (value as number) <= SIDEBAR_WIDTH_MAX,
   sessionIdleMinutes: isPositiveInteger,
   onboarded: (value) => typeof value === "boolean",
   lastCelebratedWeek: (value) => value === null || typeof value === "string",
