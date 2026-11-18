@@ -1,4 +1,4 @@
-import { Suspense, useEffect } from "react";
+import { type CSSProperties, Suspense, useEffect, useState } from "react";
 import { Toaster } from "sonner";
 import { EditorPane, subscribeToSessionWrites, WordCountStatus } from "@/features/editor";
 import { EXPORT_COMMANDS, ExportDialog } from "@/features/export";
@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useViewStore } from "@/stores/view-store";
 import { SidebarNav } from "./sidebar-nav";
+import { SidebarResizer } from "./sidebar-resizer";
 import { useCloseFlush } from "./use-close-flush";
 import { useMenuEvents } from "./use-menu-events";
 import { useTheme } from "./use-theme";
@@ -31,6 +32,11 @@ export function App() {
   const view = useViewStore((state) => state.view);
   const isZen = useViewStore((state) => state.isZen);
   const isSidebarCollapsed = useSettingsStore((state) => state.sidebarCollapsed);
+  const savedSidebarWidth = useSettingsStore((state) => state.sidebarWidth);
+  // The width while the edge is being dragged; it is saved when the drag ends.
+  const [draftSidebarWidth, setDraftSidebarWidth] = useState<number | null>(null);
+  const sidebarWidth = draftSidebarWidth ?? savedSidebarWidth;
+  const shellStyle = { "--sidebar-width": `${sidebarWidth}px` } as CSSProperties;
   useZenEscape();
   useMenuEvents();
 
@@ -57,6 +63,7 @@ export function App() {
             ? "grid-cols-[minmax(0,1fr)] grid-rows-[minmax(0,1fr)_var(--status-bar-height)]"
             : "grid-cols-[var(--sidebar-width)_minmax(0,1fr)] grid-rows-[minmax(0,1fr)_var(--status-bar-height)]",
       )}
+      style={shellStyle}
     >
       {/* `contents` keeps the sidebar a direct grid item outside zen mode. */}
       <div
@@ -65,7 +72,19 @@ export function App() {
         <LibrarySidebar footer={<SidebarNav />} />
       </div>
 
-      <main className="flex min-h-0 min-w-0 flex-col bg-background">
+      <main className="relative flex min-h-0 min-w-0 flex-col bg-background">
+        {!isZen && !isSidebarCollapsed && (
+          <SidebarResizer
+            width={sidebarWidth}
+            onResize={setDraftSidebarWidth}
+            onCommit={(width) => {
+              setDraftSidebarWidth(null);
+              if (width !== savedSidebarWidth) {
+                useSettingsStore.getState().update({ sidebarWidth: width });
+              }
+            }}
+          />
+        )}
         <div className="h-10 shrink-0" data-tauri-drag-region />
         {view === "editor" && <EditorPane />}
         {view === "settings" && <SettingsView />}
