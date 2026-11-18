@@ -14,6 +14,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
+    "install:local": "tauri build --bundles app && rm -rf /Applications/Inkwell.app && ditto src-tauri/target/release/bundle/macos/Inkwell.app /Applications/Inkwell.app",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",

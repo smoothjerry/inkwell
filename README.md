@@ -37,6 +37,7 @@ pnpm tauri dev
 |---|---|
 | `pnpm tauri dev` | Run the desktop app with hot reload |
 | `pnpm tauri build` | Build a release bundle |
+| `pnpm install:local` | Build the app and install it in `/Applications` (macOS) |
 | `pnpm dev` | Run only the web UI at `http://localhost:1420` |
 | `pnpm biome check` | Lint and check formatting (`pnpm format` to fix) |
 | `pnpm typecheck` | Type-check with `tsc` |
@@ -49,6 +50,14 @@ cargo fmt --check
 cargo clippy --all-targets -- -D warnings
 cargo test
 ```
+
+### Using Inkwell day to day (macOS)
+
+`pnpm install:local` builds a release copy of Inkwell and puts it in `/Applications`, where it opens like any other app. It takes a few minutes.
+
+Once it is installed, every `git pull` that merges changes rebuilds and reinstalls it in the background (a lefthook `post-merge` hook). The result is logged in `~/Library/Logs/inkwell-install.log`. Quit and reopen Inkwell to pick up the new version. A `git pull --rebase` does not trigger the hook; run `pnpm install:local` yourself after one.
+
+The installed app and `pnpm tauri dev` keep separate data. Release builds use `inkwell.db` and debug builds use `inkwell-dev.db`, both in the app's data folder, so testing never touches your real writing.
 
 ## Project layout
 

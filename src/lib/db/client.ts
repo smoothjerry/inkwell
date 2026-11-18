@@ -1,7 +1,9 @@
 import Database from "@tauri-apps/plugin-sql";
 
 // Must match DB_URL in src-tauri/src/migrations.rs, which registers the migrations.
-const DB_URL = "sqlite:inkwell.db";
+// `pnpm tauri dev` pairs the Vite dev server with a debug build, so DEV here
+// matches debug_assertions there.
+const DB_URL = import.meta.env.DEV ? "sqlite:inkwell-dev.db" : "sqlite:inkwell.db";
 
 let connection: Promise<Database> | undefined;
 
