@@ -30,6 +30,7 @@ export function App() {
   const theme = useSettingsStore((state) => state.theme);
   const view = useViewStore((state) => state.view);
   const isZen = useViewStore((state) => state.isZen);
+  const isSidebarCollapsed = useSettingsStore((state) => state.sidebarCollapsed);
   useZenEscape();
   useMenuEvents();
 
@@ -52,11 +53,15 @@ export function App() {
         "grid h-full",
         isZen
           ? "grid-cols-1 grid-rows-1"
-          : "grid-cols-[var(--sidebar-width)_minmax(0,1fr)] grid-rows-[minmax(0,1fr)_var(--status-bar-height)]",
+          : isSidebarCollapsed
+            ? "grid-cols-[minmax(0,1fr)] grid-rows-[minmax(0,1fr)_var(--status-bar-height)]"
+            : "grid-cols-[var(--sidebar-width)_minmax(0,1fr)] grid-rows-[minmax(0,1fr)_var(--status-bar-height)]",
       )}
     >
       {/* `contents` keeps the sidebar a direct grid item outside zen mode. */}
-      <div className={isZen ? "zen-edge zen-edge-left" : "contents"}>
+      <div
+        className={isZen ? "zen-edge zen-edge-left" : isSidebarCollapsed ? "hidden" : "contents"}
+      >
         <LibrarySidebar footer={<SidebarNav />} />
       </div>
 
@@ -74,7 +79,7 @@ export function App() {
       <footer
         className={cn(
           "flex items-center gap-1 border-t bg-background px-2",
-          isZen ? "zen-edge zen-edge-bottom" : "col-span-2",
+          isZen ? "zen-edge zen-edge-bottom" : !isSidebarCollapsed && "col-span-2",
         )}
       >
         <WeekProgress />

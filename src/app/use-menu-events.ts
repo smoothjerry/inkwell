@@ -23,6 +23,9 @@ function runMenuAction(action: string) {
     case "export":
       requestExport();
       break;
+    case "sidebar":
+      settings.update({ sidebarCollapsed: !settings.sidebarCollapsed });
+      break;
     case "zen":
       view.setZen(!view.isZen);
       break;

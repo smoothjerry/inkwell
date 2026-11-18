@@ -34,6 +34,7 @@ pub fn build(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
     )?;
 
     let palette = item("palette", "Command Palette…", Some("CmdOrCtrl+K"))?;
+    let sidebar = item("sidebar", "Toggle Sidebar", Some("CmdOrCtrl+Backslash"))?;
     let zen = item("zen", "Zen Mode", Some("CmdOrCtrl+Shift+F"))?;
     let typewriter = item(
         "typewriter",
@@ -61,12 +62,13 @@ pub fn build(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
         &[
             &palette,
             &palette_separator,
+            &sidebar,
             &zen,
             &typewriter,
             &dimming,
             &view_separator,
         ],
-        &[&palette, &zen, &typewriter, &dimming],
+        &[&palette, &sidebar, &zen, &typewriter, &dimming],
     )?;
 
     Ok(menu)
