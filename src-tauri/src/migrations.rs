@@ -3,7 +3,13 @@
 use tauri_plugin_sql::{Migration, MigrationKind};
 
 /// Connection string shared with the frontend (`src/lib/db/client.ts`).
-pub const DB_URL: &str = "sqlite:inkwell.db";
+/// Debug builds (`pnpm tauri dev`) use their own file, so testing never
+/// touches the writing in an installed release build.
+pub const DB_URL: &str = if cfg!(debug_assertions) {
+    "sqlite:inkwell-dev.db"
+} else {
+    "sqlite:inkwell.db"
+};
 
 pub fn migrations() -> Vec<Migration> {
     vec![Migration {

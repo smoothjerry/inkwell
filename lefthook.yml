@@ -12,3 +12,14 @@ pre-commit:
     - name: rustfmt
       glob: "src-tauri/**/*.rs"
       run: cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
+
+# After a `git pull` that merges changes, rebuild the installed app — but only
+# where it was installed with `pnpm install:local`. The build runs in the
+# background so the pull is not held up; see the log for its result.
+post-merge:
+  jobs:
+    - name: reinstall-app
+      run: >-
+        if [ -d /Applications/Inkwell.app ]; then
+        nohup pnpm install:local > "$HOME/Library/Logs/inkwell-install.log" 2>&1 &
+        fi
