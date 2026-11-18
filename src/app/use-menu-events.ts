@@ -2,7 +2,7 @@ import { isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useEffect } from "react";
 import { importMarkdownFiles, requestExport } from "@/features/export";
-import { usePaletteStore } from "@/features/library";
+import { useLibraryStore, usePaletteStore } from "@/features/library";
 import { DIM_MODES, useSettingsStore } from "@/stores/settings-store";
 import { useViewStore } from "@/stores/view-store";
 
@@ -17,6 +17,19 @@ function runMenuAction(action: string) {
       palette.setOpen(!palette.isOpen);
       break;
     }
+    case "new-document":
+      void useLibraryStore.getState().createDocument(null);
+      break;
+    case "new-folder":
+      void useLibraryStore.getState().createFolder(null);
+      break;
+    // Like the sidebar links: choosing the open view returns to the editor.
+    case "stats":
+      view.setView(view.view === "stats" ? "editor" : "stats");
+      break;
+    case "settings":
+      view.setView(view.view === "settings" ? "editor" : "settings");
+      break;
     case "import":
       void importMarkdownFiles();
       break;
