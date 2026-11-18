@@ -6,6 +6,8 @@ import { createAutosaver } from "./autosaver";
 import { BubbleToolbar } from "./bubble-toolbar";
 import { DocumentTitle } from "./document-title";
 import { createEditorExtensions } from "./editor-extensions";
+import { FindBar } from "./find-bar";
+import { useFindStore } from "./find-store";
 import { flushWordCount, trackDocumentOpened, trackEdit } from "./session-tracker";
 import { SlashMenu } from "./slash-menu";
 import { useWordCountStore } from "./word-count-store";
@@ -75,8 +77,11 @@ export function DocumentEditor({ documentId, initialContent }: DocumentEditorPro
     editor.view.dispatch(editor.state.tr);
   }, [editor, dimMode]);
 
+  const isFindOpen = useFindStore((state) => state.isOpen);
+
   return (
     <>
+      {isFindOpen && <FindBar editor={editor} />}
       <DocumentTitle documentId={documentId} onEnter={() => editor.commands.focus("start")} />
       <EditorContent editor={editor} />
       <BubbleToolbar editor={editor} />

@@ -1,6 +1,7 @@
 import { isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useEffect } from "react";
+import { useFindStore } from "@/features/editor";
 import { importMarkdownFiles, requestExport } from "@/features/export";
 import { useLibraryStore, usePaletteStore } from "@/features/library";
 import { DIM_MODES, useSettingsStore } from "@/stores/settings-store";
@@ -29,6 +30,12 @@ function runMenuAction(action: string) {
       break;
     case "settings":
       view.setView(view.view === "settings" ? "editor" : "settings");
+      break;
+    // The bar lives in the editor, so find needs the editor view and a document.
+    case "find":
+      if (view.view === "editor" && useLibraryStore.getState().selectedDocumentId !== null) {
+        useFindStore.getState().open();
+      }
       break;
     case "import":
       void importMarkdownFiles();

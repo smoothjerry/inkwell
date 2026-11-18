@@ -2,6 +2,7 @@ import { TaskItem, TaskList } from "@tiptap/extension-list";
 import { Typography } from "@tiptap/extension-typography";
 import { Placeholder } from "@tiptap/extensions";
 import { StarterKit } from "@tiptap/starter-kit";
+import { FindInDocument } from "./find-in-document";
 import { FocusDimming } from "./focus-dimming";
 import { SlashCommand } from "./slash-command";
 import { TypewriterScroll } from "./typewriter-scroll";
@@ -24,5 +25,6 @@ export function createEditorExtensions() {
     SlashCommand,
     TypewriterScroll,
     FocusDimming,
+    FindInDocument,
   ];
 }
