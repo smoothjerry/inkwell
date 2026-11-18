@@ -1,5 +1,6 @@
 //! The native menu bar. It starts from Tauri's default menu (app, Edit,
-//! Window, …) and adds Inkwell's own items to File and View. A chosen item is
+//! Window, …) and adds Inkwell's own items to File and View, plus Settings
+//! (in the app menu on macOS, in File elsewhere). A chosen item is
 //! sent to the frontend as a `menu` event; see `src/app/use-menu-events.ts`.
 
 use tauri::menu::{IsMenuItem, Menu, MenuItem, MenuItemKind, PredefinedMenuItem, Submenu};
@@ -22,18 +23,34 @@ pub fn build(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
         )
     };
 
+    let new_document = item("new-document", "New Document", Some("CmdOrCtrl+N"))?;
+    let new_folder = item("new-folder", "New Folder", Some("CmdOrCtrl+Shift+N"))?;
+    let new_separator = PredefinedMenuItem::separator(app)?;
     let import = item("import", "Import Markdown…", None)?;
     let export = item("export", "Export…", Some("CmdOrCtrl+Shift+E"))?;
     let file_separator = PredefinedMenuItem::separator(app)?;
-    add_to_submenu(
-        app,
-        &menu,
-        "File",
-        &[&import, &export, &file_separator],
-        &[&import, &export],
-    )?;
+    // Settings sits in the app menu on macOS and in File elsewhere.
+    let settings = item("settings", "Settings…", Some("CmdOrCtrl+Comma"))?;
+    let is_macos = cfg!(target_os = "macos");
+
+    let mut file_items: Vec<&dyn IsMenuItem<Wry>> =
+        vec![&new_document, &new_folder, &new_separator, &import, &export];
+    if !is_macos {
+        file_items.push(&settings);
+    }
+    let file_items_if_new = file_items.clone();
+    file_items.push(&file_separator);
+    add_to_submenu(app, &menu, "File", &file_items, &file_items_if_new)?;
+
+    if is_macos {
+        // The default macOS app menu starts with About; Settings follows it.
+        if let Some(MenuItemKind::Submenu(app_menu)) = menu.items()?.into_iter().next() {
+            app_menu.insert_items(&[&PredefinedMenuItem::separator(app)?, &settings], 1)?;
+        }
+    }
 
     let palette = item("palette", "Command Palette…", Some("CmdOrCtrl+K"))?;
+    let stats = item("stats", "Stats", Some("CmdOrCtrl+Shift+S"))?;
     let sidebar = item("sidebar", "Toggle Sidebar", Some("CmdOrCtrl+Backslash"))?;
     let zen = item("zen", "Zen Mode", Some("CmdOrCtrl+Shift+F"))?;
     let typewriter = item(
@@ -61,6 +78,7 @@ pub fn build(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
         "View",
         &[
             &palette,
+            &stats,
             &palette_separator,
             &sidebar,
             &zen,
@@ -68,7 +86,7 @@ pub fn build(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
             &dimming,
             &view_separator,
         ],
-        &[&palette, &sidebar, &zen, &typewriter, &dimming],
+        &[&palette, &stats, &sidebar, &zen, &typewriter, &dimming],
     )?;
 
     Ok(menu)
