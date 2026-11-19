@@ -32,6 +32,9 @@ pub fn run() {
         )
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        // Used from Rust only (Help menu), so the webview gets no opener permission.
+        .plugin(tauri_plugin_opener::init())
+        .invoke_handler(tauri::generate_handler![menu::set_menu_checks])
         .menu(menu::build)
         .on_menu_event(menu::handle_event)
         .run(tauri::generate_context!())
