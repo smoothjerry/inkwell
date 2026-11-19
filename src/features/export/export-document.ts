@@ -6,9 +6,6 @@ import { flushAutosaves } from "@/features/editor";
 import { useLibraryStore } from "@/features/library";
 import { getDocumentContent } from "@/lib/db";
 import { toDocx } from "./docx";
-import { toPlainText, toStandaloneHtml } from "./html";
-import { toMarkdown } from "./markdown";
-import { printDocument } from "./print-document";
 
 export const EXPORT_FORMATS = [
   { id: "markdown", label: "Markdown", extension: "md" },
@@ -48,6 +45,7 @@ export async function exportDocument(documentId: string, formatId: ExportFormat)
     const content = JSON.parse(raw) as JSONContent;
 
     if (format.id === "pdf") {
+      const { printDocument } = await import("./print-document");
       printDocument(title, content);
       return;
     }
@@ -63,6 +61,11 @@ export async function exportDocument(documentId: string, formatId: ExportFormat)
     if (format.id === "docx") {
       await writeFile(path, await toDocx(title, content));
     } else {
+      // The converters and their Tiptap schema load only when first used (§9).
+      const [{ toMarkdown }, { toPlainText, toStandaloneHtml }] = await Promise.all([
+        import("./markdown"),
+        import("./html"),
+      ]);
       const text =
         format.id === "markdown"
           ? toMarkdown(content)

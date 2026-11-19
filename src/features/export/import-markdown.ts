@@ -4,8 +4,6 @@ import { toast } from "sonner";
 import { countWords } from "@/domain/word-count";
 import { useLibraryStore } from "@/features/library";
 import { createDocument, renameDocument, saveDocumentContent } from "@/lib/db";
-import { toPlainText } from "./html";
-import { fromMarkdown } from "./markdown";
 
 /** "/notes/My Draft.md" → "My Draft". */
 function titleFromPath(path: string): string {
@@ -27,6 +25,11 @@ export async function importMarkdownFiles(): Promise<void> {
     return; // Cancelled.
   }
   const paths = Array.isArray(picked) ? picked : [picked];
+  // The converters and their Tiptap schema load only when first used (§9).
+  const [{ fromMarkdown }, { toPlainText }] = await Promise.all([
+    import("./markdown"),
+    import("./html"),
+  ]);
 
   const library = useLibraryStore.getState();
   const folderId =
