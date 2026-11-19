@@ -116,7 +116,7 @@ Every feature in the design spec exists. What remains is the polish and release 
 
 - `src-tauri/src/menu.rs` starts from Tauri's default menu, so the standard app, Edit, and Window items keep working, and adds Import Markdown and Export to File, and Command Palette, Zen Mode, Typewriter Scrolling, and a Dimming submenu to View.
 - Choosing an item (or pressing its shortcut) emits a `menu` event with the action name. `src/app/use-menu-events.ts` maps the action to a store change. The action names must match in both files.
-- The items are plain items, not check items, so the menu does not show which modes are on.
+- Show Sidebar, Zen Mode, Typewriter Scrolling, and the Dimming items are check items. `src/app/use-menu-checks.ts` sends the current modes to the `set_menu_checks` command whenever they change, and again after each menu action, because macOS flips a check item by itself when it is clicked.
 
 ## Search and the command palette
 
@@ -155,6 +155,33 @@ Every feature in the design spec exists. What remains is the polish and release 
 ## Fonts
 
 Geist Sans and Geist Mono are loaded with `@font-face` from the `geist` npm package's font files. The serif editor font, Newsreader, comes from `@fontsource-variable/newsreader`. Vite bundles them all into the app, so nothing is fetched at runtime.
+
+## Performance budgets
+
+Measured on 2026-11-19 on an Apple Silicon Mac (macOS 26.6), release build unless noted. Test documents are plain paragraphs of 100 words each.
+
+| Budget (§9) | Result | How it was measured |
+|---|---|---|
+| Cold start → editable < 800 ms | **Missed by about 40 ms.** 799–927 ms over five warm launches (median about 840 ms); 1,068 ms for the first launch after a build. About 430 ms of that is the page; the rest is launching, starting the process, and creating the webview. Opening a document then takes the doc-switch time below. | `open -n` on the release app with `HOME` set to an empty scratch folder, timed to a temporary log line written once the app shell and the editor area were laid out. The scratch library was empty. The window was visible; in a hidden window WebKit throttles timers and the times roughly double. |
+| Keystroke → paint < 16 ms on a 50k-word doc | Met: median 3.4 ms, p95 4.9 ms, max 5.3 ms | 60 one-letter inserts in the middle of the document, 100 ms apart, each timed through the transaction, its update handlers, and a forced style and layout. Dev build in the browser pane, with the database stubbed. |
+| Doc switch < 100 ms for a 20k-word doc | Met: 48–70 ms (50k words: 105–120 ms) | Selecting the document until its editor was drawn. Same setup as above. |
+| Autosave blocks the main thread ≤ 4 ms | Met: median 2.8 ms, max 3.4 ms on a 50k-word doc | Plain text, `JSON.stringify` of the document, the cached word count, and serializing the arguments to the save command. These run in two separate tasks, so neither blocks for the whole time. |
+| Installer < 15 MB | Met: 3.2 MB `.dmg`; 5.8 MB `.app` | `pnpm tauri build` on macOS (arm64). Windows and Linux installers are measured when the release workflow builds them. |
+| Idle CPU ~0% | Met: 0.00 s of CPU in 60 s | CPU time of the installed app and its WebKit helpers, from `ps`, with a document open and no typing. |
+
+Not measured: the Windows cold start, because no Windows machine was available, and the sidebar above 500 items. The library has not reached that size, so it is not virtualized yet (§9).
+
+### Why cold start misses, and what would fix it
+
+- The page's 430 ms covers loading and running the scripts, including the editor chunk, and opening the database, which checks the migrations. The library, settings, and stale-session loads start together after that; progress waits for settings.
+- The editor and Tiptap now load in their own chunk, so the shell no longer waits for them. Before this change the first script was 1.08 MB; now it is 501 kB, plus a 53 kB shared chunk.
+- What is left to try: profile the page's 430 ms in WebKit to see how it splits between script and database, and create the window hidden and show it after the first paint, so no time is spent on a blank window. Neither is done yet.
+
+### Code splitting
+
+- `EditorPane` is loaded with `React.lazy` from `src/features/editor/index.ts`, like `StatsView`. Tiptap and ProseMirror are in its chunk.
+- Export loads its converters with `import()` when an export or import starts: `markdown.ts`, `html.ts`, and `print-document.ts` in `export-document.ts` and `import-markdown.ts`, and the `docx` library in `docx.ts`.
+- `package.json` sets `"sideEffects": ["**/*.css"]`. Without it the bundler keeps every module a feature's `index.ts` re-exports, so `createEditorExtensions` pulled Tiptap into the first chunk. A new module that must run for its side effects alone (an `import "./x"` without names) has to be added to that list.
 
 ## Security
 

@@ -101,7 +101,11 @@ export function App() {
           />
         )}
         <div className="h-10 shrink-0" data-tauri-drag-region />
-        {view === "editor" && <EditorPane />}
+        {view === "editor" && (
+          <Suspense fallback={null}>
+            <EditorPane />
+          </Suspense>
+        )}
         {view === "settings" && <SettingsView />}
         {view === "stats" && (
           <Suspense fallback={null}>
