@@ -28,6 +28,7 @@
     "@tauri-apps/api": "^2.12.4",
     "@tauri-apps/plugin-dialog": "^2.8.4",
     "@tauri-apps/plugin-fs": "^2.7.1",
+    "@tauri-apps/plugin-log": "^2.10.2",
     "@tauri-apps/plugin-sql": "^2.6.0",
     "@tiptap/extension-list": "^3.34.0",
     "@tiptap/extension-typography": "^3.34.0",

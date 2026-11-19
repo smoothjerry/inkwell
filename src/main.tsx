@@ -1,7 +1,10 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "@/app/app";
+import { forwardLogsToFile } from "@/lib/log-forwarding";
 import "@/styles/globals.css";
+
+forwardLogsToFile();
 
 const root = document.getElementById("root");
 if (!root) {
