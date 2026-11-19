@@ -1,0 +1,68 @@
+name: Bug report
+description: Something in Inkwell does not work as it should.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. For a security problem, do not open an issue: follow [SECURITY.md](https://github.com/smoothjerry/inkwell/blob/main/SECURITY.md) instead.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: Describe the problem.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+      description: What should have happened instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open a document
+        2. ...
+    validations:
+      required: false
+
+  - type: input
+    id: version
+    attributes:
+      label: Inkwell version
+      placeholder: e.g. 0.1.0, or the commit you built from
+    validations:
+      required: false
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - macOS
+        - Windows
+        - Linux
+    validations:
+      required: true
+
+  - type: textarea
+    id: log
+    attributes:
+      label: Log excerpt
+      description: |
+        Warnings and errors are written to Inkwell.log in:
+        - macOS: `~/Library/Logs/com.smoothjerry.inkwell/`
+        - Windows: `%LOCALAPPDATA%\com.smoothjerry.inkwell\logs\`
+        - Linux: `~/.local/share/com.smoothjerry.inkwell/logs/`
+
+        Paste the lines from around the time of the problem. Check them for anything private first.
+      render: text
+    validations:
+      required: false
