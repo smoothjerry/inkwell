@@ -59,6 +59,19 @@ Once it is installed, every `git pull` that merges changes rebuilds and reinstal
 
 The installed app and `pnpm tauri dev` keep separate data. Release builds use `inkwell.db` and debug builds use `inkwell-dev.db`, both in the app's data folder, so testing never touches your real writing.
 
+### Releasing
+
+1. Set the new version, for example `0.1.0`, in `package.json`, `src-tauri/tauri.conf.json`, and `src-tauri/Cargo.toml`, and merge that to `main`.
+2. Tag the merge commit and push the tag:
+   ```bash
+   git tag v0.1.0
+   git push origin v0.1.0
+   ```
+3. The Release workflow (`.github/workflows/release.yml`) builds installers for macOS (universal), Windows, and Linux and attaches them to a draft release. It fails if the tag does not match the version in `tauri.conf.json`.
+4. Check the draft on GitHub's Releases page, then publish it.
+
+The builds are not signed. On macOS, right-click the app and choose Open the first time; on Windows, choose More info, then Run anyway. A pull request that changes `release.yml` runs the same builds without making a release, and keeps the installers on the workflow run.
+
 ## Project layout
 
 ```

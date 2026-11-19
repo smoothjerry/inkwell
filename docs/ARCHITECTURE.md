@@ -33,9 +33,9 @@ Inkwell is a Tauri 2 desktop app. A thin Rust shell hosts a webview that runs a 
 | UI kit | `src/components/ui/` | shadcn/ui components, copied into the repo. |
 | Styles | `src/styles/` | Design tokens (`tokens.css`) and global CSS (`globals.css`). |
 
-## Current state (M8)
+## Current state (M9)
 
-Every feature in the design spec exists. What remains is the polish and release work of M9: window state, backups, an accessibility pass, performance budgets, and the release workflow.
+Every feature in the design spec exists, and the M9 polish and release work is done: the native menu, window state, backups, the accessibility pass, the performance budgets, and the release workflow. Not yet written: the component, end-to-end, and Rust migration tests from §12.
 
 - `src-tauri/src/lib.rs` registers the SQL, dialog, and file-system plugins and the native menu (`menu.rs`). `migrations.rs` lists the migrations; the SQL is in `src-tauri/migrations/`.
 - `src/lib/db/` holds the connection (`client.ts`) and the folder, document, trash, settings, sessions, weeks, and achievements repositories.
@@ -191,3 +191,5 @@ Not measured: the Windows cold start, because no Windows machine was available, 
 ## Quality gates
 
 Biome (lint and format), `tsc`, Vitest, `cargo fmt`, `cargo clippy -D warnings`, and `cargo test` run in CI (`.github/workflows/ci.yml`). lefthook runs Biome, the typecheck, and `cargo fmt --check` before each commit.
+
+`.github/workflows/release.yml` builds unsigned installers with `tauri-action` for macOS (one universal app), Windows, and Linux. A `v*.*.*` tag that matches the version in `tauri.conf.json` puts them on a draft GitHub release. A pull request that changes the workflow runs the same builds and keeps the installers as run artifacts. Signing, notarization, and updates are left for later (§13).
