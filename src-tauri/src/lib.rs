@@ -4,6 +4,7 @@ mod menu;
 mod migrations;
 
 use tauri_plugin_log::{log::LevelFilter, RotationStrategy, Target, TargetKind};
+use tauri_plugin_window_state::StateFlags;
 
 /// Largest a log file gets before it is rotated, in bytes.
 const MAX_LOG_BYTES: u128 = 1_000_000;
@@ -28,6 +29,18 @@ pub fn run() {
         .plugin(
             tauri_plugin_sql::Builder::default()
                 .add_migrations(migrations::DB_URL, migrations::migrations())
+                .build(),
+        )
+        // Reopens the window at its last size and position (DESIGN_SPEC §3).
+        // Visibility is not restored, so the window can never reopen hidden.
+        .plugin(
+            tauri_plugin_window_state::Builder::new()
+                .with_state_flags(
+                    StateFlags::SIZE
+                        | StateFlags::POSITION
+                        | StateFlags::MAXIMIZED
+                        | StateFlags::FULLSCREEN,
+                )
                 .build(),
         )
         .plugin(tauri_plugin_dialog::init())
