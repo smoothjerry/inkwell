@@ -15,6 +15,7 @@ import { InlineRenameInput } from "./inline-rename-input";
 import { useLibraryStore } from "./library-store";
 import { moveTargets } from "./move-targets";
 import { MoveToSubmenu } from "./move-to-submenu";
+import { openRowMenuFromKeyboard } from "./open-row-menu";
 import { useTreeRowDnd } from "./use-tree-row-dnd";
 
 type FolderItemProps = {
@@ -99,6 +100,8 @@ export function FolderItem({ folder, depth }: FolderItemProps) {
               onKeyDown={(event) => {
                 if (event.key === "F2") {
                   actions.startRenaming(folder.id);
+                } else {
+                  openRowMenuFromKeyboard(event);
                 }
               }}
             >

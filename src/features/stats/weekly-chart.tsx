@@ -23,13 +23,16 @@ export function WeeklyChart() {
   const metCount = data.filter((week) => week.met).length;
 
   return (
-    <div
-      role="img"
-      aria-label={`Words per week for the last ${data.length} weeks. Goal met in ${metCount}.`}
-      className="h-52 rounded-lg border p-4"
-    >
+    // The summary is the chart's own title rather than an image label on this
+    // wrapper, which would hide the chart's keyboard layer from screen readers.
+    <div className="h-52 rounded-lg border p-4">
       <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
+        <ComposedChart
+          data={data}
+          margin={{ top: 8, right: 8, bottom: 0, left: 8 }}
+          title={`Words per week for the last ${data.length} weeks. Goal met in ${metCount}.`}
+          desc="Use the left and right arrow keys to read each week."
+        >
           <XAxis
             dataKey="label"
             axisLine={false}
