@@ -15,6 +15,10 @@
     "fs:allow-read-text-file",
     "fs:allow-write-text-file",
     "fs:allow-write-file",
+    { "identifier": "fs:allow-mkdir", "allow": [{ "path": "$APPCONFIG/backups" }] },
+    { "identifier": "fs:allow-read-dir", "allow": [{ "path": "$APPCONFIG/backups" }] },
+    { "identifier": "fs:allow-stat", "allow": [{ "path": "$APPCONFIG/backups/*" }] },
+    { "identifier": "fs:allow-remove", "allow": [{ "path": "$APPCONFIG/backups/*" }] },
     "core:webview:allow-print"
   ]
 }

@@ -1,4 +1,5 @@
 export * from "./achievements-repo";
+export * from "./backup-repo";
 export * from "./documents-repo";
 export * from "./folders-repo";
 export * from "./search-repo";
