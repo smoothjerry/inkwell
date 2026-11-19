@@ -6,6 +6,7 @@ import { importMarkdownFiles, requestExport } from "@/features/export";
 import { useLibraryStore, usePaletteStore } from "@/features/library";
 import { DIM_MODES, useSettingsStore } from "@/stores/settings-store";
 import { useViewStore } from "@/stores/view-store";
+import { syncMenuChecks } from "./use-menu-checks";
 
 /** Runs a native menu action. The names match the ids in src-tauri/src/menu.rs. */
 function runMenuAction(action: string) {
@@ -77,7 +78,11 @@ export function useMenuEvents() {
     }
     let stopListening: (() => void) | undefined;
     let unmounted = false;
-    void listen<string>("menu", (event) => runMenuAction(event.payload)).then((unlisten) => {
+    void listen<string>("menu", (event) => {
+      runMenuAction(event.payload);
+      // A clicked check item has flipped itself; put every mark back in step.
+      syncMenuChecks(true);
+    }).then((unlisten) => {
       if (unmounted) {
         unlisten();
       } else {

@@ -20,6 +20,7 @@ import { useViewStore } from "@/stores/view-store";
 import { SidebarNav } from "./sidebar-nav";
 import { SidebarResizer } from "./sidebar-resizer";
 import { useCloseFlush } from "./use-close-flush";
+import { useMenuChecks } from "./use-menu-checks";
 import { useMenuEvents } from "./use-menu-events";
 import { useTheme } from "./use-theme";
 import { useZenEscape } from "./use-zen-escape";
@@ -39,6 +40,7 @@ export function App() {
   const shellStyle = { "--sidebar-width": `${sidebarWidth}px` } as CSSProperties;
   useZenEscape();
   useMenuEvents();
+  useMenuChecks();
 
   useEffect(() => {
     void useLibraryStore.getState().load();

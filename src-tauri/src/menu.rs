@@ -2,13 +2,66 @@
 //! Window, …) and adds Inkwell's own items to File, Edit and View, plus Settings
 //! (in the app menu on macOS, in File elsewhere). A chosen item is
 //! sent to the frontend as a `menu` event; see `src/app/use-menu-events.ts`.
+//! The View modes are check items, which the frontend keeps in step through
+//! `set_menu_checks`; the Help items are handled here.
 
-use tauri::menu::{IsMenuItem, Menu, MenuItem, MenuItemKind, PredefinedMenuItem, Submenu};
-use tauri::{AppHandle, Emitter, Wry};
+use serde::Deserialize;
+use tauri::menu::{
+    CheckMenuItem, IsMenuItem, Menu, MenuItem, MenuItemKind, PredefinedMenuItem, Submenu,
+};
+use tauri::{AppHandle, Emitter, Manager, State, Wry};
+use tauri_plugin_log::log;
+use tauri_plugin_opener::OpenerExt;
 
 /// Ids of Inkwell's items start with this; the rest is the action sent to
 /// the frontend.
 const ACTION_PREFIX: &str = "action:";
+
+const REPORT_ISSUE_ID: &str = "help:report-issue";
+const SHOW_LOG_ID: &str = "help:show-log";
+const REPORT_ISSUE_URL: &str = "https://github.com/smoothjerry/inkwell/issues/new/choose";
+/// The log plugin names the file after the product.
+const LOG_FILE_NAME: &str = "Inkwell.log";
+
+/// The View items that show a check mark. Submenu items cannot be looked up
+/// by id later, so the menu keeps them here.
+pub struct MenuChecks {
+    sidebar: CheckMenuItem<Wry>,
+    zen: CheckMenuItem<Wry>,
+    typewriter: CheckMenuItem<Wry>,
+    dim_off: CheckMenuItem<Wry>,
+    dim_sentence: CheckMenuItem<Wry>,
+    dim_paragraph: CheckMenuItem<Wry>,
+}
+
+/// Which View modes are on, as the frontend's settings say.
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MenuCheckState {
+    sidebar: bool,
+    zen: bool,
+    typewriter: bool,
+    /// "off", "sentence" or "paragraph".
+    dim_mode: String,
+}
+
+/// Sets the View menu's check marks to match the app's modes.
+#[tauri::command]
+pub fn set_menu_checks(checks: State<'_, MenuChecks>, state: MenuCheckState) -> Result<(), String> {
+    let pairs = [
+        (&checks.sidebar, state.sidebar),
+        (&checks.zen, state.zen),
+        (&checks.typewriter, state.typewriter),
+        (&checks.dim_off, state.dim_mode == "off"),
+        (&checks.dim_sentence, state.dim_mode == "sentence"),
+        (&checks.dim_paragraph, state.dim_mode == "paragraph"),
+    ];
+    for (item, checked) in pairs {
+        item.set_checked(checked)
+            .map_err(|error| error.to_string())?;
+    }
+    Ok(())
+}
 
 pub fn build(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
     let menu = Menu::default(app)?;
@@ -49,23 +102,37 @@ pub fn build(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
         }
     }
 
+    let check = |action: &str, label: &str, accelerator: Option<&str>| {
+        CheckMenuItem::with_id(
+            app,
+            format!("{ACTION_PREFIX}{action}"),
+            label,
+            true,
+            false,
+            accelerator,
+        )
+    };
+
     let palette = item("palette", "Command Palette…", Some("CmdOrCtrl+K"))?;
     let stats = item("stats", "Stats", Some("CmdOrCtrl+Shift+S"))?;
-    let sidebar = item("sidebar", "Toggle Sidebar", Some("CmdOrCtrl+Backslash"))?;
-    let zen = item("zen", "Zen Mode", Some("CmdOrCtrl+Shift+F"))?;
-    let typewriter = item(
+    let sidebar = check("sidebar", "Show Sidebar", Some("CmdOrCtrl+Backslash"))?;
+    let zen = check("zen", "Zen Mode", Some("CmdOrCtrl+Shift+F"))?;
+    let typewriter = check(
         "typewriter",
         "Typewriter Scrolling",
         Some("CmdOrCtrl+Shift+T"),
     )?;
+    let dim_off = check("dim-off", "Off", None)?;
+    let dim_sentence = check("dim-sentence", "Sentence", None)?;
+    let dim_paragraph = check("dim-paragraph", "Paragraph", None)?;
     let dimming = Submenu::with_items(
         app,
         "Dimming",
         true,
         &[
-            &item("dim-off", "Off", None)?,
-            &item("dim-sentence", "Sentence", None)?,
-            &item("dim-paragraph", "Paragraph", None)?,
+            &dim_off,
+            &dim_sentence,
+            &dim_paragraph,
             &PredefinedMenuItem::separator(app)?,
             &item("dim-cycle", "Next Mode", Some("CmdOrCtrl+Shift+D"))?,
         ],
@@ -99,6 +166,34 @@ pub fn build(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
         None => menu.append(&Submenu::with_items(app, "Edit", true, &[&find])?)?,
     }
 
+    let report_issue =
+        MenuItem::with_id(app, REPORT_ISSUE_ID, "Report an Issue…", true, None::<&str>)?;
+    let show_log = MenuItem::with_id(app, SHOW_LOG_ID, "Show Log File", true, None::<&str>)?;
+    match find_submenu(&menu, "Help")? {
+        Some(help) => {
+            // Elsewhere than macOS, Help already holds About.
+            if !is_macos {
+                help.append(&PredefinedMenuItem::separator(app)?)?;
+            }
+            help.append_items(&[&report_issue, &show_log])?;
+        }
+        None => menu.append(&Submenu::with_items(
+            app,
+            "Help",
+            true,
+            &[&report_issue, &show_log],
+        )?)?,
+    }
+
+    app.manage(MenuChecks {
+        sidebar,
+        zen,
+        typewriter,
+        dim_off,
+        dim_sentence,
+        dim_paragraph,
+    });
+
     Ok(menu)
 }
 
@@ -128,10 +223,42 @@ fn find_submenu(menu: &Menu<Wry>, title: &str) -> tauri::Result<Option<Submenu<W
     }))
 }
 
-/// Forwards Inkwell's own menu items to the frontend.
+/// Handles the Help items and forwards Inkwell's other items to the frontend.
 pub fn handle_event(app: &AppHandle, event: tauri::menu::MenuEvent) {
-    if let Some(action) = event.id().as_ref().strip_prefix(ACTION_PREFIX) {
-        // Nothing useful can be done if the window is already gone.
-        let _ = app.emit("menu", action);
+    match event.id().as_ref() {
+        REPORT_ISSUE_ID => {
+            if let Err(error) = app.opener().open_url(REPORT_ISSUE_URL, None::<&str>) {
+                log::warn!("Could not open the issue page: {error}");
+            }
+        }
+        SHOW_LOG_ID => show_log_file(app),
+        id => {
+            if let Some(action) = id.strip_prefix(ACTION_PREFIX) {
+                // Nothing useful can be done if the window is already gone.
+                let _ = app.emit("menu", action);
+            }
+        }
+    }
+}
+
+/// Shows the log file in the system's file manager, or its folder when no
+/// warning or error has been written yet.
+fn show_log_file(app: &AppHandle) {
+    let result = app
+        .path()
+        .app_log_dir()
+        .map_err(|error| error.to_string())
+        .and_then(|dir| {
+            let file = dir.join(LOG_FILE_NAME);
+            let shown = if file.exists() {
+                app.opener().reveal_item_in_dir(file)
+            } else {
+                std::fs::create_dir_all(&dir).map_err(|error| error.to_string())?;
+                app.opener().open_path(dir.to_string_lossy(), None::<&str>)
+            };
+            shown.map_err(|error| error.to_string())
+        });
+    if let Err(error) = result {
+        log::warn!("Could not show the log file: {error}");
     }
 }
