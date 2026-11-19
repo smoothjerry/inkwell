@@ -17,6 +17,7 @@ import { closeStaleSessions } from "@/lib/db";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useViewStore } from "@/stores/view-store";
+import { runBackup } from "./run-backup";
 import { SidebarNav } from "./sidebar-nav";
 import { SidebarResizer } from "./sidebar-resizer";
 import { useCloseFlush } from "./use-close-flush";
@@ -24,6 +25,9 @@ import { useMenuChecks } from "./use-menu-checks";
 import { useMenuEvents } from "./use-menu-events";
 import { useTheme } from "./use-theme";
 import { useZenEscape } from "./use-zen-escape";
+
+/** How long after start-up the backup check runs. */
+const BACKUP_DELAY_MS = 5000;
 
 /** Application shell: library sidebar, editor canvas, and status bar. */
 export function App() {
@@ -51,8 +55,17 @@ export function App() {
       .load()
       .then(() => useProgressStore.getState().refresh());
 
+    // Back up once the app has settled, so start-up is not slowed (DESIGN_SPEC §4.3).
+    const backupTimer = setTimeout(() => {
+      runBackup().catch((error: unknown) => console.error("Backup failed:", error));
+    }, BACKUP_DELAY_MS);
+
     // Recompute progress whenever the session's words are saved.
-    return subscribeToSessionWrites(() => void useProgressStore.getState().refresh());
+    const stopProgress = subscribeToSessionWrites(() => void useProgressStore.getState().refresh());
+    return () => {
+      clearTimeout(backupTimer);
+      stopProgress();
+    };
   }, []);
 
   return (
