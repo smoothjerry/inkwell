@@ -7,7 +7,7 @@ A fast, minimal, local-first desktop word processor with a built-in weekly writi
 
 Set a weekly word-count goal, write, and watch the streak grow. Everything stays on your machine: no account, no network calls.
 
-> **Status:** early development. Milestones M0 to M8 are done: you can organize and search documents, write in a rich-text editor with Markdown shortcuts and focus modes, set a weekly word goal, keep a streak, review your stats and achievements, and import and export your writing, all saved locally. The last milestone is polish and release packaging. See the [design spec](docs/DESIGN_SPEC.md#11-milestones-build-order).
+> **Status:** feature-complete, not yet released. All milestones, M0 to M9, are done: you can organize and search documents, write in a rich-text editor with Markdown shortcuts and focus modes, set a weekly word goal, keep a streak, review your stats and achievements, and import and export your writing, all saved locally. There are no published installers yet; see [Releasing](#releasing) for how they are built. See the [design spec](docs/DESIGN_SPEC.md#11-milestones-build-order).
 
 ## Stack
 
