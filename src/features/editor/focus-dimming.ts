@@ -87,6 +87,11 @@ export const FocusDimming = Extension.create({
             // Each unit is a sentence or a whole paragraph, with the block it is in.
             const units = nearby.flatMap((block) => {
               const ranges = sentenceRanges(block);
+              // An empty line being written on is still the focus, so the text
+              // around it keeps its levels (an empty range draws nothing).
+              if (ranges.length === 0 && block === blocks[current]) {
+                return [{ block, range: { from: block.pos + 1, to: block.pos + 1 } }];
+              }
               if (mode === "paragraph" && ranges.length > 0) {
                 const first = ranges[0] as Range;
                 const last = ranges[ranges.length - 1] as Range;
@@ -98,7 +103,7 @@ export const FocusDimming = Extension.create({
               ({ range }) => $head.pos >= range.from && $head.pos <= range.to,
             );
             if (focus === -1) {
-              return null; // An empty block: everything stays faint.
+              return null;
             }
 
             const decorations: Decoration[] = [];
@@ -108,9 +113,11 @@ export const FocusDimming = Extension.create({
               if (level > NEAR_LEVELS) {
                 return;
               }
-              decorations.push(
-                Decoration.inline(range.from, range.to, { class: `dim-level-${level}` }),
-              );
+              if (range.from < range.to) {
+                decorations.push(
+                  Decoration.inline(range.from, range.to, { class: `dim-level-${level}` }),
+                );
+              }
               markerLevels.set(block, Math.min(level, markerLevels.get(block) ?? level));
             });
 
