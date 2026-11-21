@@ -16,10 +16,15 @@ pre-commit:
 # After a `git pull` that merges changes, rebuild the installed app — but only
 # where it was installed with `pnpm install:local`. The build runs in the
 # background so the pull is not held up; see the log for its result.
+# From a real terminal, lefthook runs the job in a pseudo-terminal and closes
+# it as soon as the job's shell exits, which sends a hang-up. `trap '' HUP`
+# makes the background build ignore it from the moment it starts; `nohup`
+# alone set that up too late and the build was killed before it began.
 post-merge:
   jobs:
     - name: reinstall-app
       run: >-
         if [ -d /Applications/Inkwell.app ]; then
-        nohup pnpm install:local > "$HOME/Library/Logs/inkwell-install.log" 2>&1 &
+        trap '' HUP;
+        pnpm install:local > "$HOME/Library/Logs/inkwell-install.log" 2>&1 < /dev/null &
         fi
