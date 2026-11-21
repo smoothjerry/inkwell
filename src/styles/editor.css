@@ -208,18 +208,63 @@
 }
 
 /*
- * Dimming: everything fades to 30% except the sentence or paragraph being
- * written (see features/editor/focus-dimming.ts). It fades the text color,
- * not the elements, so the focused range can be restored from inside.
+ * Dimming (see features/editor/focus-dimming.ts): the sentence or paragraph
+ * being written stays sharp, and text blurs and fades the further it is from
+ * it, until it is a faint haze. The text itself is made transparent and drawn
+ * as a blurred shadow, which works on inline text where `filter` does not.
+ * Levels 1–3 are the nearest units on either side; anything further keeps the
+ * default here.
  */
-.editor-prose.is-dimming,
-.editor-prose.is-dimming blockquote,
-.editor-prose.is-dimming ul[data-type="taskList"] > li[data-checked="true"] > div {
-  color: color-mix(in srgb, var(--fg) 30%, transparent);
+.editor-prose.is-dimming {
+  --dim-blur: 5px;
+  --dim-ink: 7%;
+  caret-color: var(--fg);
 }
 
-.editor-prose.is-dimming .editor-focus {
+.editor-prose.is-dimming,
+.editor-prose.is-dimming blockquote,
+.editor-prose.is-dimming ul[data-type="taskList"] > li[data-checked="true"] > div,
+.editor-prose.is-dimming [class*="dim-level-"] {
+  color: transparent;
+  text-shadow: 0 0 var(--dim-blur) color-mix(in srgb, var(--fg) var(--dim-ink), transparent);
+}
+
+/* Tuned in WebKit (macOS). Chromium (Windows) draws the middle levels heavier. */
+.editor-prose.is-dimming .dim-level-1 {
+  --dim-blur: 1px;
+  --dim-ink: 55%;
+}
+
+.editor-prose.is-dimming .dim-level-2 {
+  --dim-blur: 2px;
+  --dim-ink: 30%;
+}
+
+.editor-prose.is-dimming .dim-level-3 {
+  --dim-blur: 3.5px;
+  --dim-ink: 16%;
+}
+
+.editor-prose.is-dimming .dim-level-0 {
   color: var(--fg);
+  text-shadow: none;
+}
+
+/* Markers cannot take a shadow, so they only fade. */
+.editor-prose.is-dimming li::marker {
+  color: color-mix(in srgb, var(--fg) 7%, transparent);
+}
+.editor-prose.is-dimming .dim-marker-0::marker {
+  color: var(--fg);
+}
+.editor-prose.is-dimming .dim-marker-1::marker {
+  color: color-mix(in srgb, var(--fg) 55%, transparent);
+}
+.editor-prose.is-dimming .dim-marker-2::marker {
+  color: color-mix(in srgb, var(--fg) 30%, transparent);
+}
+.editor-prose.is-dimming .dim-marker-3::marker {
+  color: color-mix(in srgb, var(--fg) 16%, transparent);
 }
 
 /* Typewriter scrolling needs room to bring the last line up to the caret position. */
