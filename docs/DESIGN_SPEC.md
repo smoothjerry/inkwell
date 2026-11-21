@@ -2,7 +2,7 @@
 
 > **Working name:** "Inkwell" is a placeholder. Find/replace `Inkwell` / `inkwell` before the first commit if you rename it.
 > **Audience:** This document is the build brief for an AI coding session (Fable). It is prescriptive where decisions were made and marks open items explicitly.
-> **Status:** Draft v1.1 · 2026-11-17. M0–M8 are built. v1.1 moves the features that earlier milestones specified but did not deliver into M9 (§11.1), adds single-item permanent delete (§7.2), and records the focus shortcuts added in M6 (§7.7).
+> **Status:** Draft v1.2 · 2026-11-21. M0–M9 are built. v1.2 adds books, print formats, page counts, and a paged view (§7.9, §7.10), to be built as M10 (§11.2). v1.1 moved the features that earlier milestones specified but did not deliver into M9 (§11.1), added single-item permanent delete (§7.2), and recorded the focus shortcuts added in M6 (§7.7).
 
 ---
 
@@ -20,7 +20,7 @@ Inkwell is a fast, minimal, local-first **desktop word processor** with a Vercel
 ### 1.2 Non-goals (v1)
 - No accounts, cloud sync, or real-time collaboration (but the architecture must not preclude them; see §4.4).
 - No AI features (keep the command system extensible so they can be added later).
-- No page-layout / print-fidelity features (margins, headers/footers, page breaks, track changes).
+- No user-editable page layout (custom margins, headers/footers, manual page breaks) and no track changes. The fixed print formats of books (§7.9, §7.10) are the one exception: they show where pages fall, but the writer does not design the page.
 - No mobile or web build.
 
 ---
@@ -47,6 +47,10 @@ Inkwell is a fast, minimal, local-first **desktop word processor** with a Vercel
 | Styling | **Tailwind CSS v4 + shadcn/ui (Radix) + Geist Sans/Mono + Lucide + Motion** | Closest to Vercel's own stack. |
 | Tooling | **pnpm, Biome, Vitest, Playwright/WebdriverIO, clippy + rustfmt, GitHub Actions, Conventional Commits** | Fast, minimal config. |
 | License | **MIT** | |
+| Books | **A folder can be marked as a book**; its documents, in manual order, are its chapters | Long-form work already lives in folders; no new container to learn. |
+| Print formats | **Chosen per book** from fixed presets (trade, mass-market, hardcover, manuscript, …) | One book is one format; writers compare formats without designing pages. |
+| Paged view | **Editable**, set in the book's format typography | What you see is how the printed book breaks, and you can keep writing in it. |
+| Page counts | **One pagination engine** for counts and the paged view; shown as estimates (≈) | The count always matches the pages on screen; real typesetting still differs. |
 
 ---
 
@@ -189,7 +193,13 @@ CREATE TABLE settings (
 );
 ```
 
-**Settings keys:** `theme` (`system|light|dark`), `weeklyGoal` (default 2500), `dailyTarget` (default null), `weekStartsOn` (default 1), `editorFont` (`sans|serif|mono`), `editorWidth` (`narrow|medium|wide`), `typewriterMode`, `dimMode` (`off|sentence|paragraph`), `celebrations` (bool), `sessionIdleMinutes` (default 10).
+**Settings keys:** `theme` (`system|light|dark`), `weeklyGoal` (default 2500), `dailyTarget` (default null), `weekStartsOn` (default 1), `editorFont` (`sans|serif|mono`), `editorWidth` (`narrow|medium|wide`), `typewriterMode`, `dimMode` (`off|sentence|paragraph`), `celebrations` (bool), `sessionIdleMinutes` (default 10), `pagedView` (bool, default false), `defaultBookFormat` (a format id from §7.9, default `trade-6x9`).
+
+```sql
+-- 002_books.sql (M10)
+-- A folder is a book when book_format is set to a format id from §7.9.
+ALTER TABLE folders ADD COLUMN book_format TEXT;
+```
 
 ---
 
@@ -317,10 +327,52 @@ Evaluate after each count update (cheap checks) and on app start. Unlock is idem
 | Stats / Settings | ⌘⇧S / ⌘, |
 | Export | ⌘⇧E |
 | Find in doc | ⌘F |
+| Paged view | ⌘⇧P |
 (Use Ctrl on Windows/Linux. Register via the native menu so they show in the menu bar.)
 
 ### 7.8 Onboarding
 First launch: a 2-step modal — (1) pick weekly goal (presets), optional daily target, week start; (2) theme. Then open a "Welcome" doc explaining Markdown shortcuts and streak rules.
+
+### 7.9 Books, print formats, and page counts
+
+**Books.**
+- A folder becomes a book when it is given a print format: folder context menu ▸ **Book Format** ▸ a format, with **Not a Book** at the top to undo it. A book's sidebar row shows a book icon instead of a folder icon.
+- The book's **chapters** are its documents in reading order: a depth-first walk of the folder in manual `sort_order`, where subfolders act as parts. The sidebar's sort mode does not change reading order. Trashed documents are left out.
+- A book cannot contain another book. Marking a folder as a book is unavailable if an ancestor or descendant is already a book, and Move to and drag-and-drop refuse a move that would nest one book inside another.
+- A document outside any book uses the `defaultBookFormat` setting (Settings ▸ Editor) for its page count and the paged view.
+
+**Print formats.** Fixed presets, defined as data in `src/domain/book-formats.ts`. All use Newsreader, the bundled serif. Margins are the same on both sides in v1; there is no mirrored inside/outside margin. The type sizes are starting values, to be tuned by comparing with real books.
+
+| Id | Name | Trim | Margins (top, bottom, sides) | Type size / line height |
+|---|---|---|---|---|
+| `mass-market` | Mass-market paperback | 4.25 × 6.87 in | 0.5, 0.6, 0.5 in | 10 / 12.5 pt |
+| `trade-5.5x8.5` | Trade paperback 5.5 × 8.5 | 5.5 × 8.5 in | 0.75, 0.75, 0.625 in | 11 / 14 pt |
+| `trade-6x9` | Trade paperback 6 × 9 | 6 × 9 in | 0.75, 0.75, 0.75 in | 11.5 / 15 pt |
+| `hardcover-6.14x9.21` | Hardcover 6.14 × 9.21 | 6.14 × 9.21 in | 0.75, 0.75, 0.75 in | 11.5 / 15 pt |
+| `uk-b-format` | UK B-format paperback | 129 × 198 mm | 15, 17, 14 mm | 10.5 / 13.5 pt |
+| `a5` | A5 | 148 × 210 mm | 18, 20, 16 mm | 11 / 14 pt |
+| `manuscript` | Standard manuscript | 8.5 × 11 in | 1, 1, 1 in | 12 / 24 pt (double-spaced) |
+
+**Page counts.**
+- The status bar shows the current book's count in its format, for example `≈ 312 pages`, and the open chapter's page range, for example `pp. 41–52`. Outside a book it shows the document's own count in the default format.
+- **Page Counts…** (book context menu and command palette) opens a dialog listing the book and the open chapter in every format, so formats can be compared.
+- Counts are estimates and always shown with ≈. A tooltip says why: front matter, chapter openings, hyphenation, and the typesetter's choices all change a printed book's length.
+
+**Pagination engine.** One engine, in `src/features/pages/`, serves both the counts and the paged view (§7.10), so a count always matches the pages on screen.
+- Input: a document and a format. Output: the page breaks, as positions in the document, and the page count.
+- Rules: each chapter starts on a new page. Headings stay with the paragraph after them. A paragraph leaves at least two lines at the bottom of a page and carries at least two to the next (widow and orphan control).
+- Suggested technique, to be proven by a prototype first: lay a hidden copy of the document out in the format's typography inside a box of the page's text-block size, using CSS multi-column so that the browser breaks it into columns; each column is a page. Map the first line of each column back to a document position.
+- Results are cached per document, format, and `updated_at`, and computed off the keystroke path (§9).
+
+### 7.10 Paged view
+- **Toggle:** View ▸ **Paged View** (a check item) and ⌘⇧P. The `pagedView` setting persists. Pageless stays the default.
+- **Pages:** the document is shown as page sheets of the format's trim size, stacked vertically with a gap between them, at 96 CSS px per inch, scaled down to fit narrow windows. Sheets use the theme's background with a hairline border, not white paper, so the dark theme stays dark.
+- **Typography:** the format's font, size, line height, and text-block width replace the editor font and width settings while paged. Headings keep their relative sizes.
+- **Page breaks:** the engine's breaks are drawn as non-editable gaps (ProseMirror widget decorations) placed at the start of each page's first line, so the text before them does not reflow. The caret and arrow keys pass over a gap as over a line break; copying text does not include it.
+- **Page numbers:** at the foot of each sheet. In a book they continue from the previous chapters, so chapter 3 starts after the last page of chapter 2.
+- **Editing:** everything works as in pageless: typing, menus, find, autosave, sessions. After an edit, pages are recomputed once typing pauses, starting from the edited page.
+- **Other modes:** zen mode, typewriter scrolling, and dimming work in the paged view.
+- **Accessibility:** gaps and page numbers are hidden from screen readers; the current page number is in the status bar as `Page 41 of ≈ 312`.
 
 ---
 
@@ -364,6 +416,9 @@ Original design informed by the Geist aesthetic; do not copy Vercel logos, brand
 | Autosave | Never blocks the main thread > 4 ms |
 | Installer size | < 15 MB |
 | Idle CPU | ~0% (no polling; timers only while a session is active) |
+| Keystroke → paint, paged view | < 16 ms on a 50k-word doc; re-pagination never runs on the keystroke path |
+| Re-pagination after an edit | Pages correct within 500 ms of typing pausing, on a 50k-word doc |
+| Full pagination (count or first paged view) | 50k words in < 1 s, in idle chunks; no task over 50 ms |
 
 Techniques: lazy-load Stats view and export libs (`docx`, Recharts) with dynamic `import()`; keep word counting debounced/idle; virtualize the sidebar if > 500 items.
 
@@ -432,6 +487,7 @@ inkwell/
 | M7 | **Search + ⌘K** — FTS5, command palette with docs + commands | Search across 1k docs < 50 ms |
 | M8 | **Import/export** — MD import; MD/DOCX/HTML/TXT/PDF export | Round-trip MD preserves structure |
 | M9 | **Completion + release** — features carried over from M1–M8, then native menu, window state, backups, a11y pass, perf budgets, release workflow producing signed-ready artifacts. Full list in §11.1 | Every §11.1 item meets its "done when"; a tagged build produces installers for 3 OSes |
+| M10 | **Books and paged view** — books as folders, print formats, page counts, editable paged view. Full list in §11.2 | Every §11.2 item meets its "done when" |
 
 ### 11.1 M9 scope
 
@@ -465,6 +521,20 @@ M9 has two parts. Part A finishes features that earlier milestones specified but
 
 Out of scope for M9: the component, end-to-end, and Rust migration tests listed in §12 have not been written; `tests/e2e/` arrives with the end-to-end test. Code signing, notarization, and auto-update stay in §13.
 
+### 11.2 M10 scope
+
+Build in this order; each row is its own PR. Prototype the pagination engine before the rows that depend on it, and stop to revise this section if the prototype cannot meet §9.
+
+| Item | From | Done when |
+|---|---|---|
+| Print formats | §7.9 | `src/domain/book-formats.ts` defines the presets and the text-block size of each, with unit tests |
+| Books in the library | §7.9, §5 | Migration `002_books.sql` applies; a folder can be marked as a book and unmarked from its context menu; book rows show a book icon; nesting a book inside a book is refused by the menu, Move to, and drag-and-drop; reading order is a pure, tested function in `src/domain/` |
+| Pagination engine | §7.9 | Given a document and a format, returns page breaks and a count following the §7.9 rules; meets the full-pagination budget in §9; results are cached |
+| Page counts | §7.9 | The status bar shows the book's count and the chapter's page range; the Page Counts dialog lists every format; `defaultBookFormat` is in Settings |
+| Paged view | §7.10 | ⌘⇧P and the View menu toggle sheets in the format's typography with page gaps and page numbers that continue across a book; editing, find, zen, typewriter, and dimming work; the paged-view budgets in §9 are measured and recorded |
+
+Out of scope for M10: book typography (chapters starting on a right-hand page, drop caps, running heads, front matter) and exporting a book as a print-ready PDF in its format. Both are in §13.
+
 ---
 
 ## 12. Testing requirements
@@ -474,6 +544,8 @@ Out of scope for M9: the component, end-to-end, and Rust migration tests listed 
   - weeks: Monday vs Sunday start, DST transitions, week-start change mid-history (pro-rated transitional week), goal change mid-week
   - streak: in-progress week met/unmet, gaps, skipped weeks with no data, longest streak
   - achievements: idempotent unlocks, threshold boundaries
+  - book formats: text-block size of each preset, inch and millimetre units
+  - reading order: nested subfolders, manual order regardless of sidebar sort, trashed documents left out, a book refusing a nested book
 - **Component:** progress bar ARIA values, status bar rendering, stats tiles with fixture data.
 - **E2E (smoke):** create folder → create doc → type → see progress update → restart app → content and stats persist; export Markdown.
 - **Rust:** migrations apply cleanly on an empty DB and are idempotent.
@@ -487,3 +559,5 @@ Out of scope for M9: the component, end-to-end, and Rust migration tests listed 
 - **Writing sprints** — optional timed sprints with their own target.
 - **Code signing / notarization + auto-update** (`tauri-plugin-updater`) — needed before public distribution.
 - **Final product name** and icon.
+- **Book typography** — chapters starting on a right-hand page, scene-break ornaments, drop caps, running heads, mirrored margins, and front matter (title page, copyright, contents). Each changes page counts, so the pagination engine (§7.9) must take them in.
+- **Print-ready PDF of a book** — export a whole book in its format, with its page breaks, for print-on-demand services.
