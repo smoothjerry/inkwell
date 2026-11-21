@@ -2,7 +2,7 @@
 
 > **Working name:** "Inkwell" is a placeholder. Find/replace `Inkwell` / `inkwell` before the first commit if you rename it.
 > **Audience:** This document is the build brief for an AI coding session (Fable). It is prescriptive where decisions were made and marks open items explicitly.
-> **Status:** Draft v1.2 · 2026-11-21. M0–M9 are built. v1.2 adds books, print formats, page counts, and a paged view (§7.9, §7.10), to be built as M10 (§11.2). v1.1 moved the features that earlier milestones specified but did not deliver into M9 (§11.1), added single-item permanent delete (§7.2), and recorded the focus shortcuts added in M6 (§7.7).
+> **Status:** Draft v1.3 · 2026-11-21. M0–M9 are built. v1.3 adds a formatting toolbar, richer formatting, and a bundled font library (§7.11), to be built as M9.5 (§11.2) before M10. v1.2 added books, print formats, page counts, and a paged view (§7.9, §7.10), to be built as M10 (§11.3). v1.1 moved the features that earlier milestones specified but did not deliver into M9 (§11.1), added single-item permanent delete (§7.2), and recorded the focus shortcuts added in M6 (§7.7).
 
 ---
 
@@ -51,6 +51,10 @@ Inkwell is a fast, minimal, local-first **desktop word processor** with a Vercel
 | Print formats | **Chosen per book** from fixed presets (trade, mass-market, hardcover, manuscript, …) | One book is one format; writers compare formats without designing pages. |
 | Paged view | **Editable**, set in the book's format typography | What you see is how the printed book breaks, and you can keep writing in it. |
 | Page counts | **One pagination engine** for counts and the paged view; shown as estimates (≈) | The count always matches the pages on screen; real typesetting still differs. |
+| Toolbar | **Optional formatting toolbar** (View ▸ Show Toolbar), alongside the bubble and slash menus | Word-processor controls for those who want them, without forcing chrome on those who don't. |
+| Fonts | **Bundled library of ~20 open-licence fonts**; no system or downloaded fonts | Same look on every machine and no network calls (§1.1). |
+| Font scope | **Per document, with per-selection overrides** | A document reads as one design; a word or passage can still differ. |
+| Rich formatting | **Underline, alignment, indent, highlight, text colour, per-selection font and size** | Expected of a word processor; Markdown export drops what it cannot express, and says so. |
 
 ---
 
@@ -193,7 +197,7 @@ CREATE TABLE settings (
 );
 ```
 
-**Settings keys:** `theme` (`system|light|dark`), `weeklyGoal` (default 2500), `dailyTarget` (default null), `weekStartsOn` (default 1), `editorFont` (`sans|serif|mono`), `editorWidth` (`narrow|medium|wide`), `typewriterMode`, `dimMode` (`off|sentence|paragraph`), `celebrations` (bool), `sessionIdleMinutes` (default 10), `pagedView` (bool, default false), `defaultBookFormat` (a format id from §7.9, default `trade-6x9`).
+**Settings keys:** `theme` (`system|light|dark`), `weeklyGoal` (default 2500), `dailyTarget` (default null), `weekStartsOn` (default 1), `editorFont` (a font id from §7.11, default `geist`; the font of documents that have not chosen one — from M9.5, older values map `sans` → `geist`, `serif` → `newsreader`, `mono` → `geist-mono`), `editorWidth` (`narrow|medium|wide`), `showToolbar` (bool, default true), `typewriterMode`, `dimMode` (`off|sentence|paragraph`), `celebrations` (bool), `sessionIdleMinutes` (default 10), `pagedView` (bool, default false), `defaultBookFormat` (a format id from §7.9, default `trade-6x9`).
 
 ```sql
 -- 002_books.sql (M10)
@@ -290,10 +294,10 @@ Evaluate after each count update (cheap checks) and on app start. Unlock is idem
 ### 7.3 Editor
 - Blocks: paragraph, H1–H3, bullet/ordered/task lists, blockquote, code block, horizontal rule, link, bold/italic/strike/inline code.
 - Markdown input rules (`# `, `- `, `1. `, `> `, ``` ``` ```, `**x**`, `_x_`, `---`).
-- Bubble menu on selection (bold, italic, link, H1/H2, quote). No permanent toolbar.
+- Bubble menu on selection (bold, italic, link, H1/H2, quote). An optional formatting toolbar (§7.11) offers the same and more.
 - Slash menu (`/`) for block insertion.
 - Smart typography (curly quotes, em dashes, ellipses).
-- Editor font choice (Geist Sans / a serif such as Newsreader or iA Writer Quattro-like / Geist Mono) and width setting.
+- Fonts from the bundled library (§7.11), per document and per selection, and a width setting.
 - Per-doc word count + reading time in status bar; selection word count when text is selected.
 
 ### 7.4 Focus features
@@ -328,6 +332,11 @@ Evaluate after each count update (cheap checks) and on app start. Unlock is idem
 | Export | ⌘⇧E |
 | Find in doc | ⌘F |
 | Paged view | ⌘⇧P |
+| Show toolbar | ⌘⌥T |
+| Underline / highlight | ⌘U / ⌘⇧H |
+| Align left / centre / right / justify | ⌘{ / ⌘\| / ⌘} / ⌘⌥\| |
+| Indent / outdent | ⌘] / ⌘[ |
+| Bigger / smaller text (selection) | ⌘⇧. / ⌘⇧, |
 (Use Ctrl on Windows/Linux. Register via the native menu so they show in the menu bar.)
 
 ### 7.8 Onboarding
@@ -367,12 +376,60 @@ First launch: a 2-step modal — (1) pick weekly goal (presets), optional daily 
 ### 7.10 Paged view
 - **Toggle:** View ▸ **Paged View** (a check item) and ⌘⇧P. The `pagedView` setting persists. Pageless stays the default.
 - **Pages:** the document is shown as page sheets of the format's trim size, stacked vertically with a gap between them, at 96 CSS px per inch, scaled down to fit narrow windows. Sheets use the theme's background with a hairline border, not white paper, so the dark theme stays dark.
-- **Typography:** the format's font, size, line height, and text-block width replace the editor font and width settings while paged. Headings keep their relative sizes.
+- **Typography:** the format's font, size, line height, and text-block width replace the editor width setting, the document's font and size (§7.11), and any per-selection font or size while paged; page counts ignore them too. Bold, italic, underline, highlight, colour, alignment, and indents still show. Headings keep their relative sizes.
 - **Page breaks:** the engine's breaks are drawn as non-editable gaps (ProseMirror widget decorations) placed at the start of each page's first line, so the text before them does not reflow. The caret and arrow keys pass over a gap as over a line break; copying text does not include it.
 - **Page numbers:** at the foot of each sheet. In a book they continue from the previous chapters, so chapter 3 starts after the last page of chapter 2.
 - **Editing:** everything works as in pageless: typing, menus, find, autosave, sessions. After an edit, pages are recomputed once typing pauses, starting from the edited page.
 - **Other modes:** zen mode, typewriter scrolling, and dimming work in the paged view.
 - **Accessibility:** gaps and page numbers are hidden from screen readers; the current page number is in the status bar as `Page 41 of ≈ 312`.
+
+### 7.11 Formatting toolbar, rich formatting, and fonts
+
+**Toolbar.**
+- A 36 px bar between the title bar and the document, in the status bar's style: ghost icon buttons, a hairline bottom border, no fill. View ▸ **Show Toolbar** (a check item) and ⌘⌥T toggle it; the `showToolbar` setting persists, and it is on by default. It is hidden in zen mode and in the Stats and Settings views.
+- Groups, left to right: undo and redo · paragraph style (Body, Heading 1–3, Quote, Code) · font · size · bold, italic, underline, strikethrough · text colour, highlight · link · alignment (left, centre, right, justify) · bullet, numbered, and task list · outdent, indent.
+- Buttons show the selection's state (`aria-pressed`). When the selection mixes values, the font and size pickers are blank.
+- When the window is too narrow, the groups that do not fit move into a ⋯ overflow menu, from the right.
+- The toolbar is one tab stop with arrow-key navigation between controls (`role="toolbar"`, roving tabindex), and Esc returns focus to the document.
+- A native **Format** menu lists the same commands with their shortcuts (§7.7).
+
+**Rich formatting.**
+- **Underline:** StarterKit's underline mark, now enabled. ⌘U.
+- **Alignment:** left (default), centre, right, justify, on paragraphs and headings.
+- **Indent:** in a list, indent and outdent nest the item (as Tab and Shift+Tab already do). On a paragraph they set a block indent of 0–5 steps of 0.5 in.
+- **Text colour and highlight:** chosen from small named palettes, stored by name (for example `red`, `yellow`) and drawn from theme tokens, so each reads well in both themes. Text colour: default plus 8; highlight: none plus 5.
+- **Per-selection font and size:** a font from the library and a size in points (8–72) on any run of text, as text-style marks. ⌘⇧. and ⌘⇧, step the size up and down. Applying a document's own font or size to a selection removes the mark rather than adding one.
+
+**Document style.**
+- Each document has its own font, size (default 13 pt, today's 17 px body size), and line spacing (1.0, 1.15, 1.5, 2.0; default 1.5), set in Format ▸ **Document Style…** and with the toolbar's pickers when nothing is selected.
+- They are stored as attributes of the document node in the Tiptap JSON, so they travel with the content, export with it, and changing them can be undone.
+- A document that has not chosen a font uses the `editorFont` setting. Settings ▸ Editor keeps that choice and now lists the whole library.
+- Per-selection marks win over the document style, which wins over the setting. This resolution is a pure, tested function in `src/domain/`.
+
+**Font library.**
+- About 20 fonts under the SIL Open Font License, bundled through `@fontsource` packages (variable versions where available), with Latin and Latin Extended subsets, upright and italic. No font is downloaded at run time, and no system fonts are listed.
+- `@font-face` rules load a font only when it is first used, so the library does not slow cold start. The font picker shows each name in its own face.
+- Starting list, grouped as in the picker:
+
+  | Group | Fonts |
+  |---|---|
+  | Serif | Newsreader, EB Garamond, Libre Baskerville, Crimson Pro, Literata, Lora, Source Serif 4, Cormorant Garamond |
+  | Sans | Geist, Inter, IBM Plex Sans, Work Sans, Atkinson Hyperlegible |
+  | Mono | Geist Mono, JetBrains Mono, IBM Plex Mono |
+  | Typewriter | Courier Prime, Cutive Mono |
+  | Handwriting | Caveat, Patrick Hand |
+
+- Each font's licence is checked when it is added and listed in `docs/FONTS.md`. A font id that is no longer in the library falls back to the document's font, then to `editorFont`.
+- The library is defined as data in `src/domain/fonts.ts`: id, display name, group, CSS family, and generic fallback.
+
+**Export.**
+- **PDF** (printed from the app) keeps everything, with the bundled fonts.
+- **DOCX** keeps underline, alignment, indents, colour, highlight, fonts, and sizes. Fonts are named, not embedded, so Word substitutes any font that is not installed.
+- **HTML** keeps them as inline styles, naming the font with a generic fallback.
+- **Markdown** keeps text and structure only. The export dialog says that underline, alignment, indents, colour, highlight, fonts, and sizes are left out.
+- Markdown import is unchanged.
+
+**Not in scope:** fonts installed on the computer, fonts added by the user, custom colours, line spacing on a selection, and fonts in book formats (books keep Newsreader, §7.9).
 
 ---
 
@@ -414,7 +471,7 @@ Original design informed by the Geist aesthetic; do not copy Vercel logos, brand
 | Keystroke → paint | < 16 ms on a 50k-word doc |
 | Doc switch | < 100 ms for a 20k-word doc |
 | Autosave | Never blocks the main thread > 4 ms |
-| Installer size | < 15 MB |
+| Installer size | < 15 MB (including the font library, §7.11) |
 | Idle CPU | ~0% (no polling; timers only while a session is active) |
 | Keystroke → paint, paged view | < 16 ms on a 50k-word doc; re-pagination never runs on the keystroke path |
 | Re-pagination after an edit | Pages correct within 500 ms of typing pausing, on a 50k-word doc |
@@ -487,7 +544,8 @@ inkwell/
 | M7 | **Search + ⌘K** — FTS5, command palette with docs + commands | Search across 1k docs < 50 ms |
 | M8 | **Import/export** — MD import; MD/DOCX/HTML/TXT/PDF export | Round-trip MD preserves structure |
 | M9 | **Completion + release** — features carried over from M1–M8, then native menu, window state, backups, a11y pass, perf budgets, release workflow producing signed-ready artifacts. Full list in §11.1 | Every §11.1 item meets its "done when"; a tagged build produces installers for 3 OSes |
-| M10 | **Books and paged view** — books as folders, print formats, page counts, editable paged view. Full list in §11.2 | Every §11.2 item meets its "done when" |
+| M9.5 | **Formatting and fonts** — formatting toolbar, rich formatting, document style, bundled font library. Full list in §11.2 | Every §11.2 item meets its "done when" |
+| M10 | **Books and paged view** — books as folders, print formats, page counts, editable paged view. Full list in §11.3 | Every §11.3 item meets its "done when" |
 
 ### 11.1 M9 scope
 
@@ -521,7 +579,19 @@ M9 has two parts. Part A finishes features that earlier milestones specified but
 
 Out of scope for M9: the component, end-to-end, and Rust migration tests listed in §12 have not been written; `tests/e2e/` arrives with the end-to-end test. Code signing, notarization, and auto-update stay in §13.
 
-### 11.2 M10 scope
+### 11.2 M9.5 scope
+
+Build before M10, in this order; each row is its own PR.
+
+| Item | From | Done when |
+|---|---|---|
+| Font library | §7.11 | The fonts are bundled and defined in `src/domain/fonts.ts`; their licences are in `docs/FONTS.md`; Settings ▸ Editor lists them all, with old `editorFont` values mapped; the installer is measured and still under 15 MB; cold start is unchanged |
+| Document style | §7.11 | Format ▸ Document Style… sets a document's font, size, and line spacing; they persist in the document JSON and can be undone; the resolution order is a tested function in `src/domain/` |
+| Rich formatting | §7.11, §7.7 | Underline, alignment, indent, text colour, highlight, and per-selection font and size work from the native Format menu and their shortcuts, survive a restart, and read well in both themes |
+| Formatting toolbar | §7.11 | ⌘⌥T and View ▸ Show Toolbar toggle it; every control works and shows the selection's state; it overflows into ⋯ when narrow; it works by keyboard alone |
+| Export of formatting | §7.11 | DOCX, HTML, and PDF keep the new formatting; the export dialog says what Markdown leaves out; the export converters have tests for each new mark and attribute |
+
+### 11.3 M10 scope
 
 Build in this order; each row is its own PR. Prototype the pagination engine before the rows that depend on it, and stop to revise this section if the prototype cannot meet §9.
 
@@ -544,6 +614,7 @@ Out of scope for M10: book typography (chapters starting on a right-hand page, d
   - weeks: Monday vs Sunday start, DST transitions, week-start change mid-history (pro-rated transitional week), goal change mid-week
   - streak: in-progress week met/unmet, gaps, skipped weeks with no data, longest streak
   - achievements: idempotent unlocks, threshold boundaries
+  - fonts: unique ids, every group non-empty, an unknown id falling back; style resolution: selection mark over document style over the `editorFont` setting
   - book formats: text-block size of each preset, inch and millimetre units
   - reading order: nested subfolders, manual order regardless of sidebar sort, trashed documents left out, a book refusing a nested book
 - **Component:** progress bar ARIA values, status bar rendering, stats tiles with fixture data.
