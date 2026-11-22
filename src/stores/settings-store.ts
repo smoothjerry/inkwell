@@ -1,10 +1,10 @@
 import { toast } from "sonner";
 import { create } from "zustand";
+import { DEFAULT_FONT_ID, type FontId, toFontId } from "@/domain/fonts";
 import { LIBRARY_SORTS, type LibrarySort } from "@/domain/library-sort";
 import { getSettings, setSetting } from "@/lib/db";
 
 export const THEMES = ["system", "light", "dark"] as const;
-export const EDITOR_FONTS = ["sans", "serif", "mono"] as const;
 export const EDITOR_WIDTHS = ["narrow", "medium", "wide"] as const;
 export const DIM_MODES = ["off", "sentence", "paragraph"] as const;
 
@@ -14,7 +14,6 @@ export const SIDEBAR_WIDTH_MAX = 400;
 export const SIDEBAR_WIDTH_DEFAULT = 260;
 
 export type Theme = (typeof THEMES)[number];
-export type EditorFont = (typeof EDITOR_FONTS)[number];
 export type EditorWidth = (typeof EDITOR_WIDTHS)[number];
 export type DimMode = (typeof DIM_MODES)[number];
 
@@ -26,7 +25,8 @@ export type Settings = {
   dailyTarget: number | null;
   /** 0 = Sunday … 6 = Saturday. */
   weekStartsOn: number;
-  editorFont: EditorFont;
+  /** The font of documents that have not chosen one (DESIGN_SPEC §7.11). */
+  editorFont: FontId;
   editorWidth: EditorWidth;
   /** Keep the caret line near the middle of the window while writing. */
   typewriterMode: boolean;
@@ -51,7 +51,7 @@ const DEFAULTS: Settings = {
   weeklyGoal: 2500,
   dailyTarget: null,
   weekStartsOn: 1,
-  editorFont: "sans",
+  editorFont: DEFAULT_FONT_ID,
   editorWidth: "medium",
   typewriterMode: false,
   dimMode: "off",
@@ -73,7 +73,7 @@ const VALIDATORS: { [Key in keyof Settings]: (value: unknown) => boolean } = {
   dailyTarget: (value) => value === null || isPositiveInteger(value),
   weekStartsOn: (value) =>
     Number.isInteger(value) && (value as number) >= 0 && (value as number) <= 6,
-  editorFont: (value) => EDITOR_FONTS.includes(value as EditorFont),
+  editorFont: (value) => toFontId(value) !== null,
   editorWidth: (value) => EDITOR_WIDTHS.includes(value as EditorWidth),
   typewriterMode: (value) => typeof value === "boolean",
   dimMode: (value) => DIM_MODES.includes(value as DimMode),
@@ -109,6 +109,10 @@ export const useSettingsStore = create<SettingsState>((set) => ({
         if (key in stored && VALIDATORS[key](stored[key])) {
           valid[key] = stored[key];
         }
+      }
+      // Before the font library, `editorFont` was `sans`, `serif`, or `mono`.
+      if ("editorFont" in valid) {
+        valid.editorFont = toFontId(valid.editorFont);
       }
       set({ ...(valid as Partial<Settings>), isLoaded: true });
     } catch (error) {

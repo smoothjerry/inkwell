@@ -1,5 +1,6 @@
 /* Editor canvas and document typography (DESIGN_SPEC §7.3, §8). */
 
+/* The editor pane sets --editor-font from the `editorFont` setting. */
 .editor-column {
   --editor-font: var(--font-sans);
   --editor-width: 68ch;
@@ -11,18 +12,6 @@
   font-family: var(--editor-font);
   font-size: 17px;
   line-height: 1.7;
-}
-
-.editor-column[data-font="serif"] {
-  --editor-font: "Newsreader Variable", Georgia, serif;
-
-  font-size: 18px;
-}
-
-.editor-column[data-font="mono"] {
-  --editor-font: var(--font-mono);
-
-  font-size: 15px;
 }
 
 .editor-column[data-width="narrow"] {
