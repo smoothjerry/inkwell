@@ -20,11 +20,14 @@ pre-commit:
 # it as soon as the job's shell exits, which sends a hang-up. `trap '' HUP`
 # makes the background build ignore it from the moment it starts; `nohup`
 # alone set that up too late and the build was killed before it began.
+# A pull from an editor's git panel may not load the shell's config, so the
+# usual rustup locations are added to PATH for the build to find `cargo`.
 post-merge:
   jobs:
     - name: reinstall-app
       run: >-
         if [ -d /Applications/Inkwell.app ]; then
         trap '' HUP;
+        PATH="$HOME/.cargo/bin:/opt/homebrew/opt/rustup/bin:/usr/local/opt/rustup/bin:$PATH";
         pnpm install:local > "$HOME/Library/Logs/inkwell-install.log" 2>&1 < /dev/null &
         fi
