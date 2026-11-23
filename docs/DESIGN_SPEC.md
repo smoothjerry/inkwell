@@ -2,7 +2,7 @@
 
 > **Working name:** "Inkwell" is a placeholder. Find/replace `Inkwell` / `inkwell` before the first commit if you rename it.
 > **Audience:** This document is the build brief for an AI coding session (Fable). It is prescriptive where decisions were made and marks open items explicitly.
-> **Status:** Draft v1.3 · 2026-11-21. M0–M9 are built. v1.3 adds a formatting toolbar, richer formatting, and a bundled font library (§7.11), to be built as M9.5 (§11.2) before M10. v1.2 added books, print formats, page counts, and a paged view (§7.9, §7.10), to be built as M10 (§11.3). v1.1 moved the features that earlier milestones specified but did not deliver into M9 (§11.1), added single-item permanent delete (§7.2), and recorded the focus shortcuts added in M6 (§7.7).
+> **Status:** Draft v1.4 · 2026-11-23. M0–M9 are built. v1.4 adds an in-app notice when a newer build of Inkwell has been installed, with Relaunch (§7.12), to be built as M9.6 (§11). v1.3 adds a formatting toolbar, richer formatting, and a bundled font library (§7.11), to be built as M9.5 (§11.2) before M10. v1.2 added books, print formats, page counts, and a paged view (§7.9, §7.10), to be built as M10 (§11.3). v1.1 moved the features that earlier milestones specified but did not deliver into M9 (§11.1), added single-item permanent delete (§7.2), and recorded the focus shortcuts added in M6 (§7.7).
 
 ---
 
@@ -55,6 +55,7 @@ Inkwell is a fast, minimal, local-first **desktop word processor** with a Vercel
 | Fonts | **Bundled library of ~20 open-licence fonts**; no system or downloaded fonts | Same look on every machine and no network calls (§1.1). |
 | Font scope | **Per document, with per-selection overrides** | A document reads as one design; a word or passage can still differ. |
 | Rich formatting | **Underline, alignment, indent, highlight, text colour, per-selection font and size** | Expected of a word processor; Markdown export drops what it cannot express, and says so. |
+| Updates | **The app notices when a newer build is installed and offers Relaunch**; downloading updates comes later (§13) | A rebuild or reinstall otherwise goes unnoticed until the app is restarted. One notice serves both, so the downloader only adds a source. |
 
 ---
 
@@ -64,7 +65,7 @@ Use the latest stable versions at build time within these majors; pin exact vers
 
 **Shell / native**
 - Tauri 2.x (Rust stable, edition 2021)
-- Plugins: `tauri-plugin-sql` (sqlite), `tauri-plugin-dialog`, `tauri-plugin-fs`, `tauri-plugin-window-state`, `tauri-plugin-store` (settings, optional — settings may also live in SQLite; pick one, prefer SQLite)
+- Plugins: `tauri-plugin-sql` (sqlite), `tauri-plugin-dialog`, `tauri-plugin-fs`, `tauri-plugin-window-state`, `tauri-plugin-process` (relaunch, §7.12), `tauri-plugin-store` (settings, optional — settings may also live in SQLite; pick one, prefer SQLite)
 
 **Frontend**
 - React 19, TypeScript 5.x (`strict: true`, `noUncheckedIndexedAccess: true`)
@@ -431,6 +432,29 @@ First launch: a 2-step modal — (1) pick weekly goal (presets), optional daily 
 
 **Not in scope:** fonts installed on the computer, fonts added by the user, custom colours, line spacing on a selection, and fonts in book formats (books keep Newsreader, §7.9).
 
+### 7.12 Update notice
+
+When a newer build of Inkwell replaces the one that is running, the app says so and offers to restart into it. On macOS the running app keeps its old code until it is restarted, so without a notice a rebuild (for example the post-pull rebuild of a source checkout) or a reinstall goes unseen.
+
+**Detecting a new build.**
+- At launch, Rust records the identity of the app's own executable on disk: its file id (inode) and modification time.
+- The `installed_update` command compares that record with the executable now at the same path and returns whether it has been replaced. A missing or unreadable file counts as not replaced.
+- The frontend calls it when the window regains focus, and at no other time. There is no polling (§9 idle CPU), and no network access.
+- On Windows a running executable cannot be replaced, so the check is a no-op there.
+
+**The notice.**
+- A persistent toast at the bottom right: "Inkwell has been updated." with a **Relaunch** button and a close button. It stays until one of them is used.
+- It appears once per new build: closing it hides it until a further build is installed. Relaunch stays available from the command palette (⌘K, "Relaunch to Update") while an update is waiting.
+- In zen mode the notice waits until zen mode ends.
+
+**Relaunch.**
+- Relaunch first runs the same flush as quitting (pending autosave, open session), then restarts the app with `tauri-plugin-process`, which starts the executable now at the app's path: the new build.
+- If the flush fails, the app does not restart and shows the usual save-error toast.
+
+**Later.** When auto-update arrives (§13), a downloaded update uses the same notice, with "Restart to Update" for an update that is installed on restart.
+
+**Not in scope:** checking for, downloading, or installing updates; release notes; anything that needs the network.
+
 ---
 
 ## 8. Visual design system (Vercel/Geist-inspired)
@@ -472,7 +496,7 @@ Original design informed by the Geist aesthetic; do not copy Vercel logos, brand
 | Doc switch | < 100 ms for a 20k-word doc |
 | Autosave | Never blocks the main thread > 4 ms |
 | Installer size | < 15 MB (including the font library, §7.11) |
-| Idle CPU | ~0% (no polling; timers only while a session is active) |
+| Idle CPU | ~0% (no polling; timers only while a session is active; the update check (§7.12) runs only on window focus) |
 | Keystroke → paint, paged view | < 16 ms on a 50k-word doc; re-pagination never runs on the keystroke path |
 | Re-pagination after an edit | Pages correct within 500 ms of typing pausing, on a 50k-word doc |
 | Full pagination (count or first paged view) | 50k words in < 1 s, in idle chunks; no task over 50 ms |
@@ -545,6 +569,7 @@ inkwell/
 | M8 | **Import/export** — MD import; MD/DOCX/HTML/TXT/PDF export | Round-trip MD preserves structure |
 | M9 | **Completion + release** — features carried over from M1–M8, then native menu, window state, backups, a11y pass, perf budgets, release workflow producing signed-ready artifacts. Full list in §11.1 | Every §11.1 item meets its "done when"; a tagged build produces installers for 3 OSes |
 | M9.5 | **Formatting and fonts** — formatting toolbar, rich formatting, document style, bundled font library. Full list in §11.2 | Every §11.2 item meets its "done when" |
+| M9.6 | **Update notice** — §7.12, one PR; it does not depend on M9.5 and can be built before or after it | A replaced executable is reported on the next window focus; the notice appears once per new build; Relaunch saves pending work and starts the new build; a Rust test covers replaced, unchanged, and missing executables |
 | M10 | **Books and paged view** — books as folders, print formats, page counts, editable paged view. Full list in §11.3 | Every §11.3 item meets its "done when" |
 
 ### 11.1 M9 scope
@@ -619,7 +644,7 @@ Out of scope for M10: book typography (chapters starting on a right-hand page, d
   - reading order: nested subfolders, manual order regardless of sidebar sort, trashed documents left out, a book refusing a nested book
 - **Component:** progress bar ARIA values, status bar rendering, stats tiles with fixture data.
 - **E2E (smoke):** create folder → create doc → type → see progress update → restart app → content and stats persist; export Markdown.
-- **Rust:** migrations apply cleanly on an empty DB and are idempotent.
+- **Rust:** migrations apply cleanly on an empty DB and are idempotent; the update check (§7.12) reports a replaced file and ignores an unchanged or missing one.
 
 ---
 
@@ -628,7 +653,7 @@ Out of scope for M10: book typography (chapters starting on a right-hand page, d
 - **Sync** — candidates: Yjs + a small relay, or SQLite-level sync (cr-sqlite / ElectricSQL). Requires accounts.
 - **AI (BYO key)** — selection actions via the Claude API; would plug into the slash/bubble command registry.
 - **Writing sprints** — optional timed sprints with their own target.
-- **Code signing / notarization + auto-update** (`tauri-plugin-updater`) — needed before public distribution.
+- **Code signing / notarization + auto-update** (`tauri-plugin-updater`) — needed before public distribution. Auto-update checks GitHub Releases for a signed newer version, downloads it, and shows it through the update notice (§7.12). It needs a signing key for update files, `latest.json` from the release workflow, and macOS notarization.
 - **Final product name** and icon.
 - **Book typography** — chapters starting on a right-hand page, scene-break ornaments, drop caps, running heads, mirrored margins, and front matter (title page, copyright, contents). Each changes page counts, so the pagination engine (§7.9) must take them in.
 - **Print-ready PDF of a book** — export a whole book in its format, with its page breaks, for print-on-demand services.
