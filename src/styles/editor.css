@@ -1,6 +1,6 @@
 /* Editor canvas and document typography (DESIGN_SPEC §7.3, §8). */
 
-/* The editor pane sets --editor-font from the `editorFont` setting. */
+/* A document's font, size, and line spacing are set by document-editor.tsx. */
 .editor-column {
   --editor-font: var(--font-sans);
   --editor-width: 68ch;

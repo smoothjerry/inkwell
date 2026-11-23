@@ -1,9 +1,13 @@
-import { EditorContent, type JSONContent, useEditor } from "@tiptap/react";
-import { useEffect, useRef, useState } from "react";
+import { EditorContent, type JSONContent, useEditor, useEditorState } from "@tiptap/react";
+import { type CSSProperties, useEffect, useRef, useState } from "react";
+import { resolveDocumentStyle } from "@/domain/document-style";
+import { fontFamilyCss } from "@/domain/fonts";
 import { countWords } from "@/domain/word-count";
 import { useSettingsStore } from "@/stores/settings-store";
 import { createAutosaver } from "./autosaver";
 import { BubbleToolbar } from "./bubble-toolbar";
+import { getDocumentStyle } from "./document-style";
+import { DocumentStyleDialog } from "./document-style-dialog";
 import { DocumentTitle } from "./document-title";
 import { createEditorExtensions } from "./editor-extensions";
 import { FindBar } from "./find-bar";
@@ -79,13 +83,27 @@ export function DocumentEditor({ documentId, initialContent }: DocumentEditorPro
 
   const isFindOpen = useFindStore((state) => state.isOpen);
 
+  // The document's own style, else the editorFont setting and the defaults.
+  // The selector's result is compared by value, so typing does not re-render.
+  const styleAttrs = useEditorState({ editor, selector: ({ editor }) => getDocumentStyle(editor) });
+  const editorFont = useSettingsStore((state) => state.editorFont);
+  const style = resolveDocumentStyle(styleAttrs, editorFont);
+  const styleCss: CSSProperties = {
+    fontFamily: fontFamilyCss(style.font),
+    fontSize: `${style.fontSize}pt`,
+    lineHeight: style.lineHeight,
+  };
+
   return (
     <>
       {isFindOpen && <FindBar editor={editor} />}
-      <DocumentTitle documentId={documentId} onEnter={() => editor.commands.focus("start")} />
-      <EditorContent editor={editor} />
+      <div style={styleCss}>
+        <DocumentTitle documentId={documentId} onEnter={() => editor.commands.focus("start")} />
+        <EditorContent editor={editor} />
+      </div>
       <BubbleToolbar editor={editor} />
       <SlashMenu />
+      <DocumentStyleDialog editor={editor} />
     </>
   );
 }

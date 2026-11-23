@@ -1,7 +1,7 @@
 import { isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useEffect } from "react";
-import { useFindStore } from "@/features/editor";
+import { useDocumentStyleStore, useFindStore } from "@/features/editor";
 import { importMarkdownFiles, requestExport } from "@/features/export";
 import { useLibraryStore, usePaletteStore } from "@/features/library";
 import { DIM_MODES, useSettingsStore } from "@/stores/settings-store";
@@ -36,6 +36,11 @@ function runMenuAction(action: string) {
     case "find":
       if (view.view === "editor" && useLibraryStore.getState().selectedDocumentId !== null) {
         useFindStore.getState().open();
+      }
+      break;
+    case "document-style":
+      if (view.view === "editor" && useLibraryStore.getState().selectedDocumentId !== null) {
+        useDocumentStyleStore.getState().open();
       }
       break;
     case "import":
