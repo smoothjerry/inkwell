@@ -1,6 +1,7 @@
 import type { JSONContent } from "@tiptap/react";
-import { useEffect, useState } from "react";
+import { type CSSProperties, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { fontById, fontFamilyCss } from "@/domain/fonts";
 import { useLibraryStore } from "@/features/library";
 import { getDocumentContent } from "@/lib/db";
 import { useSettingsStore } from "@/stores/settings-store";
@@ -63,10 +64,15 @@ export function EditorPane() {
     return null;
   }
 
+  const columnStyle = {
+    "--editor-font": fontFamilyCss(fontById(editorFont)),
+  } as CSSProperties;
+
   return (
     <div className="editor-scroll min-h-0 flex-1 overflow-y-auto">
       <div
         className="editor-column"
+        style={columnStyle}
         data-font={editorFont}
         data-width={editorWidth}
         data-typewriter={typewriterMode}

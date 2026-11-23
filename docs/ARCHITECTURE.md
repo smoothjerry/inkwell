@@ -154,7 +154,9 @@ Every feature in the design spec exists, and the M9 polish and release work is d
 
 ## Fonts
 
-Geist Sans and Geist Mono are loaded with `@font-face` from the `geist` npm package's font files. The serif editor font, Newsreader, comes from `@fontsource-variable/newsreader`. Vite bundles them all into the app, so nothing is fetched at runtime.
+Geist Sans and Geist Mono are loaded with `@font-face` from the `geist` npm package's font files. Vite bundles every font into the app, so nothing is fetched at runtime.
+
+The editor's font library (DESIGN_SPEC §7.11) is defined as data in `src/domain/fonts.ts`; its licences are in `docs/FONTS.md`. The other 18 fonts come from `@fontsource` packages. `src/styles/fonts.css` holds their `@font-face` rules, copied from each package's CSS but keeping only the Latin and Latin Extended subsets: 80 files, 2.9 MB. A font file is downloaded only when text first uses it, so cold start does not load the library. The editor column sets `--editor-font` from the `editorFont` setting, and older `sans`, `serif`, and `mono` values are mapped to Geist, Newsreader, and Geist Mono when settings load.
 
 ## Performance budgets
 
@@ -166,7 +168,7 @@ Measured on 2026-11-19 on an Apple Silicon Mac (macOS 26.6), release build unles
 | Keystroke → paint < 16 ms on a 50k-word doc | Met: median 3.4 ms, p95 4.9 ms, max 5.3 ms | 60 one-letter inserts in the middle of the document, 100 ms apart, each timed through the transaction, its update handlers, and a forced style and layout. Dev build in the browser pane, with the database stubbed. |
 | Doc switch < 100 ms for a 20k-word doc | Met: 48–70 ms (50k words: 105–120 ms) | Selecting the document until its editor was drawn. Same setup as above. |
 | Autosave blocks the main thread ≤ 4 ms | Met: median 2.8 ms, max 3.4 ms on a 50k-word doc | Plain text, `JSON.stringify` of the document, the cached word count, and serializing the arguments to the save command. These run in two separate tasks, so neither blocks for the whole time. |
-| Installer < 15 MB | Met: 3.2 MB `.dmg`; 5.8 MB `.app` | `pnpm tauri build` on macOS (arm64). Windows and Linux installers are measured when the release workflow builds them. |
+| Installer < 15 MB | Met: 5.9 MB `.dmg`; 8.6 MB `.app` with the font library (3.2 MB and 5.8 MB before it). Cold start was re-timed after adding the library: median 833 ms, page 433 ms, unchanged. | `pnpm tauri build` on macOS (arm64). Windows and Linux installers are measured when the release workflow builds them. |
 | Idle CPU ~0% | Met: 0.00 s of CPU in 60 s | CPU time of the installed app and its WebKit helpers, from `ps`, with a document open and no typing. |
 
 Not measured: the Windows cold start, because no Windows machine was available, and the sidebar above 500 items. The library has not reached that size, so it is not virtualized yet (§9).

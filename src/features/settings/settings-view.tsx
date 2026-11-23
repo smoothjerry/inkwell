@@ -1,11 +1,6 @@
 import { useProgressStore } from "@/features/stats";
-import {
-  DIM_MODES,
-  EDITOR_FONTS,
-  EDITOR_WIDTHS,
-  THEMES,
-  useSettingsStore,
-} from "@/stores/settings-store";
+import { DIM_MODES, EDITOR_WIDTHS, THEMES, useSettingsStore } from "@/stores/settings-store";
+import { FontPicker } from "./font-picker";
 import { GoalFields } from "./goal-fields";
 import { NumberField } from "./number-field";
 import { SegmentedControl } from "./segmented-control";
@@ -49,10 +44,9 @@ export function SettingsView() {
               onChange={(theme) => settings.update({ theme })}
             />
           </SettingRow>
-          <SettingRow title="Editor font">
-            <SegmentedControl
+          <SettingRow title="Editor font" description="Used by documents that have not chosen one.">
+            <FontPicker
               label="Editor font"
-              options={EDITOR_FONTS}
               value={settings.editorFont}
               onChange={(editorFont) => settings.update({ editorFont })}
             />
