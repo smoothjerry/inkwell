@@ -1,6 +1,7 @@
 import { lazy } from "react";
 
 export { flushAutosaves, whenSavesSettle } from "./autosaver";
+export { useDocumentStyleStore } from "./document-style-store";
 export { createEditorExtensions } from "./editor-extensions";
 export { useFindStore } from "./find-store";
 export { flushPendingWork } from "./flush-pending-work";

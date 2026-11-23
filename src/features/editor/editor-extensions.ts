@@ -2,6 +2,7 @@ import { TaskItem, TaskList } from "@tiptap/extension-list";
 import { Typography } from "@tiptap/extension-typography";
 import { Placeholder } from "@tiptap/extensions";
 import { StarterKit } from "@tiptap/starter-kit";
+import { DocumentStyle } from "./document-style";
 import { FindInDocument } from "./find-in-document";
 import { FocusDimming } from "./focus-dimming";
 import { SlashCommand } from "./slash-command";
@@ -18,6 +19,7 @@ export function createEditorExtensions() {
       link: { openOnClick: false, autolink: true },
       underline: false,
     }),
+    DocumentStyle,
     Typography,
     TaskList,
     TaskItem.configure({ nested: true }),

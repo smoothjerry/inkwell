@@ -67,6 +67,7 @@ Every feature in the design spec exists, and the M9 polish and release work is d
 - `EditorPane` loads the selected document's content, then mounts `DocumentEditor` keyed by document id. Switching documents unmounts one editor and mounts another.
 - The editor does not re-render React on each keystroke (`shouldRerenderOnTransaction: false`). The selection toolbar reads editor state through a selector.
 - The slash menu is a ProseMirror suggestion plugin (`slash-command.ts`) that publishes its state to a small Zustand store; `slash-menu.tsx` renders it.
+- Document style (DESIGN_SPEC §7.11): a document's font, size, and line spacing are attributes of its `doc` node (`fontId`, `fontSize` in points, `lineSpacing`), added by `document-style.ts`. They are saved in the document JSON, and `setDocumentStyle` changes them with ProseMirror's `setDocAttribute`, so a change is one undoable step. `resolveDocumentStyle` in `src/domain/document-style.ts` fills in what a document has not chosen from the `editorFont` setting and the defaults (13 pt, spacing 1.5); `DocumentEditor` applies the result to the title and body. Line spacing 1.0 is a CSS line-height of 1.15. Format ▸ Document Style… opens `document-style-dialog.tsx`, where each change applies at once.
 
 ### Autosave
 
@@ -114,7 +115,7 @@ Every feature in the design spec exists, and the M9 polish and release work is d
 
 ### Native menu
 
-- `src-tauri/src/menu.rs` starts from Tauri's default menu, so the standard app, Edit, and Window items keep working, and adds Import Markdown and Export to File, and Command Palette, Zen Mode, Typewriter Scrolling, and a Dimming submenu to View.
+- `src-tauri/src/menu.rs` starts from Tauri's default menu, so the standard app, Edit, and Window items keep working, and adds Import Markdown and Export to File, Command Palette, Zen Mode, Typewriter Scrolling, and a Dimming submenu to View, and a Format menu after Edit with Document Style….
 - Choosing an item (or pressing its shortcut) emits a `menu` event with the action name. `src/app/use-menu-events.ts` maps the action to a store change. The action names must match in both files.
 - Show Sidebar, Zen Mode, Typewriter Scrolling, and the Dimming items are check items. `src/app/use-menu-checks.ts` sends the current modes to the `set_menu_checks` command whenever they change, and again after each menu action, because macOS flips a check item by itself when it is clicked.
 

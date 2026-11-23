@@ -1,7 +1,7 @@
 //! The native menu bar. It starts from Tauri's default menu (app, Edit,
-//! Window, …) and adds Inkwell's own items to File, Edit and View, plus Settings
-//! (in the app menu on macOS, in File elsewhere). A chosen item is
-//! sent to the frontend as a `menu` event; see `src/app/use-menu-events.ts`.
+//! Window, …) and adds Inkwell's own items to File, Edit and View, a Format
+//! menu, and Settings (in the app menu on macOS, in File elsewhere). A chosen
+//! item is sent to the frontend as a `menu` event; see `src/app/use-menu-events.ts`.
 //! The View modes are check items, which the frontend keeps in step through
 //! `set_menu_checks`; the Help items are handled here.
 
@@ -164,6 +164,17 @@ pub fn build(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
             edit.append(&find)?;
         }
         None => menu.append(&Submenu::with_items(app, "Edit", true, &[&find])?)?,
+    }
+
+    // Format follows Edit, as in other word processors (DESIGN_SPEC §7.11).
+    let document_style = item("document-style", "Document Style…", None)?;
+    let format = Submenu::with_items(app, "Format", true, &[&document_style])?;
+    let edit_index = menu.items()?.iter().position(|kind| {
+        matches!(kind, MenuItemKind::Submenu(submenu) if submenu.text().is_ok_and(|text| text == "Edit"))
+    });
+    match edit_index {
+        Some(index) => menu.insert(&format, index + 1)?,
+        None => menu.append(&format)?,
     }
 
     let report_issue =
