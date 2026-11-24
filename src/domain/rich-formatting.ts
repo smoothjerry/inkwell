@@ -24,6 +24,29 @@ export const HIGHLIGHTS = ["yellow", "green", "blue", "pink", "purple"] as const
 
 export type Highlight = (typeof HIGHLIGHTS)[number];
 
+/**
+ * Colours for exports, which go on a white page: the light theme's values
+ * from styles/tokens.css, as hex so DOCX can use them too.
+ */
+export const PRINT_TEXT_COLORS: Record<TextColor, string> = {
+  red: "#dc2626",
+  orange: "#ea580c",
+  yellow: "#ca8a04",
+  green: "#16a34a",
+  blue: "#2563eb",
+  purple: "#9333ea",
+  pink: "#db2777",
+  gray: "#6b7280",
+};
+
+export const PRINT_HIGHLIGHTS: Record<Highlight, string> = {
+  yellow: "#fef08a",
+  green: "#bbf7d0",
+  blue: "#bfdbfe",
+  pink: "#fbcfe8",
+  purple: "#e9d5ff",
+};
+
 /** The highlight ⌘⇧H applies. */
 export const DEFAULT_HIGHLIGHT: Highlight = "yellow";
 

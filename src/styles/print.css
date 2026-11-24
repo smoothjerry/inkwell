@@ -22,6 +22,8 @@
     display: none !important;
   }
 
+  /* The font, size, and line height are the document's own, set inline by
+     print-document.ts; these are fallbacks. Sizes below are relative to them. */
   #print-root {
     display: block;
     color: #000;
@@ -41,20 +43,20 @@
   }
 
   #print-root h1 {
-    font-size: 18pt;
+    font-size: 1.64em;
   }
 
   #print-root h2 {
-    font-size: 14pt;
+    font-size: 1.27em;
   }
 
   #print-root h3 {
-    font-size: 12pt;
+    font-size: 1.09em;
   }
 
   #print-root > h1:first-child {
     margin-top: 0;
-    font-size: 22pt;
+    font-size: 2em;
   }
 
   #print-root p,
@@ -100,7 +102,7 @@
   #print-root code,
   #print-root pre {
     font-family: "Geist Mono", Menlo, monospace;
-    font-size: 9.5pt;
+    font-size: 0.86em;
   }
 
   #print-root pre {
