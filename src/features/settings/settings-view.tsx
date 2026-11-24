@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useProgressStore } from "@/features/stats";
 import { DIM_MODES, EDITOR_WIDTHS, THEMES, useSettingsStore } from "@/stores/settings-store";
 import { FontPicker } from "./font-picker";
@@ -9,8 +10,13 @@ import { SettingRow } from "./setting-row";
 const SECTION_HEADING =
   "border-b pb-2 text-[11px] font-medium text-muted-foreground uppercase tracking-wide";
 
+type SettingsViewProps = {
+  /** The Updates section's rows, owned by the app shell (DESIGN_SPEC §7.12). */
+  updates?: ReactNode;
+};
+
 /** The Settings view. Every change applies and saves immediately. */
-export function SettingsView() {
+export function SettingsView({ updates }: SettingsViewProps) {
   const settings = useSettingsStore();
 
   return (
@@ -61,7 +67,7 @@ export function SettingsView() {
           </SettingRow>
         </section>
 
-        <section aria-labelledby="settings-writing">
+        <section aria-labelledby="settings-writing" className="mb-10">
           <h2 id="settings-writing" className={SECTION_HEADING}>
             Writing
           </h2>
@@ -114,6 +120,15 @@ export function SettingsView() {
             />
           </SettingRow>
         </section>
+
+        {updates && (
+          <section aria-labelledby="settings-updates">
+            <h2 id="settings-updates" className={SECTION_HEADING}>
+              Updates
+            </h2>
+            {updates}
+          </section>
+        )}
       </div>
     </div>
   );

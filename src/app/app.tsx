@@ -21,6 +21,7 @@ import { useViewStore } from "@/stores/view-store";
 import { runBackup } from "./run-backup";
 import { SidebarNav } from "./sidebar-nav";
 import { SidebarResizer } from "./sidebar-resizer";
+import { UpdateSettings } from "./update-settings";
 import { useCloseFlush } from "./use-close-flush";
 import { useMenuChecks } from "./use-menu-checks";
 import { useMenuEvents } from "./use-menu-events";
@@ -110,7 +111,7 @@ export function App() {
             <EditorPane />
           </Suspense>
         )}
-        {view === "settings" && <SettingsView />}
+        {view === "settings" && <SettingsView updates={<UpdateSettings />} />}
         {view === "stats" && (
           <Suspense fallback={null}>
             <StatsView />

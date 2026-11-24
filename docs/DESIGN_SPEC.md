@@ -446,6 +446,7 @@ When a newer build of Inkwell replaces the one that is running, the app says so 
 - A persistent toast at the bottom right: "Inkwell has been updated." with a **Relaunch** button and a close button. It stays until one of them is used.
 - It appears once per new build: closing it hides it until a further build is installed. Relaunch stays available from the command palette (⌘K, "Relaunch to Update") while an update is waiting.
 - In zen mode the notice waits until zen mode ends.
+- Settings ▸ Updates says whether a newer build is waiting, with **Relaunch** while one is and **Check Now** otherwise, so an update is still reachable after the notice is closed. Check Now runs the same check once, when clicked; it is not polling.
 
 **Relaunch.**
 - Relaunch first runs the same flush as quitting (pending autosave, open session), then restarts the app with Tauri's built-in `AppHandle::restart()` (no process plugin is needed), which starts the executable now at the app's path: the new build.
