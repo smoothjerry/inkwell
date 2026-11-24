@@ -5,6 +5,7 @@ export { useDocumentStyleStore } from "./document-style-store";
 export { createEditorExtensions } from "./editor-extensions";
 export { useFindStore } from "./find-store";
 export { flushPendingWork } from "./flush-pending-work";
+export { runFormatMenuAction } from "./format-menu";
 export { subscribeToSessionWrites } from "./session-tracker";
 export { WordCountStatus } from "./word-count-status";
 
