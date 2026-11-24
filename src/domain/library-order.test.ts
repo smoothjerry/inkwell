@@ -160,3 +160,37 @@ describe("planDrop", () => {
     expect(plan(dragged, target)).toBeNull();
   });
 });
+
+describe("planDrop with books", () => {
+  // Novel is a book; Memoir is a book; Drafts holds Memoir.
+  const folders: TreeItem[] = [
+    { ...folder("novel", null, 1), bookFormat: "trade-6x9" },
+    folder("part", "novel", 1),
+    folder("drafts", null, 2),
+    { ...folder("memoir", "drafts", 1), bookFormat: "a5" },
+    folder("notes", null, 3),
+  ];
+
+  it.each([
+    ["a book into another book", folder("memoir", "drafts", 1), "part"],
+    ["a folder holding a book into a book", folder("drafts", null, 2), "novel"],
+  ] as const)("refuses %s", (_name, dragged, targetId) => {
+    expect(
+      planDrop(dragged, { kind: "folder", id: targetId, zone: "inside" }, folders, []),
+    ).toBeNull();
+  });
+
+  it("refuses placing a book next to a folder inside another book", () => {
+    const target = { kind: "folder", id: "part", zone: "after" } as const;
+    expect(planDrop(folder("memoir", "drafts", 1), target, folders, [])).toBeNull();
+  });
+
+  it("allows an ordinary folder into a book, and a document anywhere", () => {
+    const inside = { kind: "folder", id: "novel", zone: "inside" } as const;
+    expect(planDrop(folder("notes", null, 3), inside, folders, [])).toEqual({
+      parentId: "novel",
+      sortOrder: null,
+    });
+    expect(planDrop(doc("x", null, 1), inside, folders, [doc("x", null, 1)])).not.toBeNull();
+  });
+});

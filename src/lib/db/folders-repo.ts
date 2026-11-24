@@ -4,7 +4,7 @@ import type { Folder } from "./types";
 
 const COLUMNS = `
   f.id, f.parent_id AS parentId, f.name, f.sort_order AS sortOrder,
-  f.created_at AS createdAt, f.updated_at AS updatedAt, f.deleted_at AS deletedAt`;
+  f.book_format AS bookFormat, f.created_at AS createdAt, f.updated_at AS updatedAt, f.deleted_at AS deletedAt`;
 
 // The folder with id $1 and all of its descendants.
 const SUBTREE = `
@@ -55,6 +55,16 @@ export async function renameFolder(id: string, name: string): Promise<void> {
   await db.execute("UPDATE folders SET name = $2, updated_at = $3 WHERE id = $1", [
     id,
     name,
+    Date.now(),
+  ]);
+}
+
+/** Makes a folder a book in `bookFormat`, or, with null, an ordinary folder again. */
+export async function setFolderBookFormat(id: string, bookFormat: string | null): Promise<void> {
+  const db = await getDb();
+  await db.execute("UPDATE folders SET book_format = $2, updated_at = $3 WHERE id = $1", [
+    id,
+    bookFormat,
     Date.now(),
   ]);
 }

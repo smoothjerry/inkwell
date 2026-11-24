@@ -12,10 +12,18 @@ pub const DB_URL: &str = if cfg!(debug_assertions) {
 };
 
 pub fn migrations() -> Vec<Migration> {
-    vec![Migration {
-        version: 1,
-        description: "init",
-        sql: include_str!("../migrations/001_init.sql"),
-        kind: MigrationKind::Up,
-    }]
+    vec![
+        Migration {
+            version: 1,
+            description: "init",
+            sql: include_str!("../migrations/001_init.sql"),
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 2,
+            description: "books",
+            sql: include_str!("../migrations/002_books.sql"),
+            kind: MigrationKind::Up,
+        },
+    ]
 }

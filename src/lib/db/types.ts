@@ -4,6 +4,8 @@ export type Folder = {
   parentId: string | null;
   name: string;
   sortOrder: number;
+  /** A print format id (DESIGN_SPEC §7.9) when the folder is a book, else null. */
+  bookFormat: string | null;
   createdAt: number;
   updatedAt: number;
   deletedAt: number | null;

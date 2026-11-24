@@ -29,6 +29,7 @@ function treeItems() {
         id: folder.id,
         parentId: folder.parentId,
         sortOrder: folder.sortOrder,
+        bookFormat: folder.bookFormat,
       }),
     ),
     documents: documents.map(
