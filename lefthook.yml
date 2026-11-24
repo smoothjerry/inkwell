@@ -22,8 +22,9 @@ pre-commit:
 # alone set that up too late and the build was killed before it began.
 # A pull from an editor's git panel may not load the shell's config, so the
 # usual rustup locations are added to PATH for the build to find `cargo`.
-# The pull returns before the build ends, so the job says it has started and
-# a macOS notification says when the app is installed, or that it failed.
+# The pull returns before the build ends, so the job says it has started.
+# Once it is installed, a running Inkwell offers Relaunch itself (DESIGN_SPEC
+# §7.12); a macOS notification appears only if the build fails.
 post-merge:
   jobs:
     - name: reinstall-app
@@ -31,11 +32,9 @@ post-merge:
         if [ -d /Applications/Inkwell.app ]; then
         trap '' HUP;
         PATH="$HOME/.cargo/bin:/opt/homebrew/opt/rustup/bin:/usr/local/opt/rustup/bin:$PATH";
-        echo "Rebuilding Inkwell in the background. A notification will say when it is installed.";
+        echo "Rebuilding Inkwell in the background. Inkwell will offer Relaunch when it is installed.";
         echo "Log: ~/Library/Logs/inkwell-install.log";
-        (if pnpm install:local; then
-        osascript -e 'display notification "Reopen Inkwell to use the new version." with title "Inkwell updated"';
-        else
-        osascript -e 'display notification "See ~/Library/Logs/inkwell-install.log." with title "Inkwell update failed"';
-        fi) > "$HOME/Library/Logs/inkwell-install.log" 2>&1 < /dev/null &
+        (pnpm install:local ||
+        osascript -e 'display notification "See ~/Library/Logs/inkwell-install.log." with title "Inkwell update failed"')
+        > "$HOME/Library/Logs/inkwell-install.log" 2>&1 < /dev/null &
         fi
