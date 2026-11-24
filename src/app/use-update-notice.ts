@@ -33,15 +33,24 @@ export const RELAUNCH_COMMAND: Command = {
   run: () => void relaunchToUpdate(),
 };
 
-/** Asks Rust whether a newer build has replaced the running one. */
-function checkForUpdate() {
-  invoke<string | null>("installed_update")
-    .then((token) => {
-      if (token !== null) {
-        useUpdateStore.getState().setWaiting(token);
-      }
-    })
-    .catch((error: unknown) => console.error(error));
+/**
+ * Asks Rust whether a newer build has replaced the running one, and records
+ * it. Resolves true if one is waiting.
+ */
+export async function checkForUpdate(): Promise<boolean> {
+  try {
+    const token = await invoke<string | null>("installed_update");
+    if (token !== null) {
+      useUpdateStore.getState().setWaiting(token);
+    }
+  } catch (error: unknown) {
+    console.error(error);
+  }
+  return useUpdateStore.getState().waitingToken !== null;
+}
+
+function checkOnFocus() {
+  void checkForUpdate();
 }
 
 /**
@@ -58,8 +67,8 @@ export function useUpdateNotice() {
     if (!isTauri()) {
       return;
     }
-    window.addEventListener("focus", checkForUpdate);
-    return () => window.removeEventListener("focus", checkForUpdate);
+    window.addEventListener("focus", checkOnFocus);
+    return () => window.removeEventListener("focus", checkOnFocus);
   }, []);
 
   useEffect(() => {

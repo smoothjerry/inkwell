@@ -99,6 +99,7 @@ DESIGN_SPEC §7.12. `src-tauri/src/update_check.rs` records the executable's ino
 - `src/app/use-update-notice.ts` calls it on the window `focus` event only, so idle CPU stays at zero. A new token goes into `src/stores/update-store.ts` and shows a persistent sonner toast; closing it records that token as dismissed. In zen mode the toast is hidden until zen mode ends.
 - Relaunch calls `flushPendingWork()`, which resolves false if an edit could not be saved; then the app stays open with the save-error toast. Otherwise the `relaunch` command calls Tauri's `AppHandle::restart()`, which starts the executable now at the app's path. No process plugin is needed.
 - While an update is waiting, the command palette also lists "Relaunch to Update".
+- Settings ▸ Updates (`src/app/update-settings.tsx`, passed into `SettingsView` through its `updates` prop because the settings feature cannot import the app shell) offers Relaunch while an update is waiting, and otherwise Check Now, which runs `checkForUpdate()` once.
 
 ## Goals and the streak
 
