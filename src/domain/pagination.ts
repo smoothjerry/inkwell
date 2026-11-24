@@ -90,3 +90,21 @@ export function packPages(blocks: readonly MeasuredBlock[], pageHeight: number):
   }
   return pages;
 }
+
+/** A chapter's pages within its book, 1-based and inclusive. */
+export type PageRange = { first: number; last: number };
+
+/**
+ * Each chapter's pages within the book, from the chapters' page counts in
+ * reading order. Every chapter starts on a new page, so a chapter's first
+ * page follows the previous chapter's last.
+ */
+export function pageRanges(counts: readonly number[]): PageRange[] {
+  const ranges: PageRange[] = [];
+  let before = 0;
+  for (const count of counts) {
+    ranges.push({ first: before + 1, last: before + count });
+    before += count;
+  }
+  return ranges;
+}

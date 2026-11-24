@@ -250,29 +250,30 @@ export async function paginate(
   }
 }
 
-/** Finished and running paginations, newest last. */
+/** Finished and running paginations, newest last. Each holds only a count and positions. */
 const results = new Map<string, Promise<Pagination>>();
-const MAX_RESULTS = 64;
+const MAX_RESULTS = 1000;
 
 /**
  * Paginates a stored document, caching the result per document, format, and
  * `updatedAt` (DESIGN_SPEC §7.9), so a count asked for twice, or by the
- * status bar and the paged view at once, is computed once. A failed or
- * cancelled run is not kept.
+ * status bar and the Page Counts dialog at once, is computed once.
+ * `loadContent` is called only when there is no result yet. A run is shared,
+ * so it is never cancelled; a caller that no longer wants it ignores it.
+ * A failed run is not kept.
  */
 export function paginateDocument(
   documentId: string,
   updatedAt: number,
-  content: JSONContent,
+  loadContent: () => Promise<JSONContent>,
   format: BookFormat,
-  signal?: AbortSignal,
 ): Promise<Pagination> {
   const key = `${documentId}|${format.id}|${updatedAt}`;
   const cached = results.get(key);
   if (cached) {
     return cached;
   }
-  const result = paginate(content, format, signal);
+  const result = loadContent().then((content) => paginate(content, format));
   results.set(key, result);
   result.catch(() => results.delete(key));
   if (results.size > MAX_RESULTS) {

@@ -12,6 +12,14 @@ let queue: Promise<void> = Promise.resolve();
 // Flush functions of the autosavers that are currently in use.
 const live = new Set<() => Promise<void>>();
 
+const saveListeners = new Set<(documentId: string) => void>();
+
+/** Calls `listener` with a document's id after each save of it, so page counts can follow. */
+export function subscribeToSaves(listener: (documentId: string) => void): () => void {
+  saveListeners.add(listener);
+  return () => saveListeners.delete(listener);
+}
+
 // How many saves have failed since launch, so a flush can tell whether its saves did.
 let failedSaves = 0;
 
@@ -38,6 +46,9 @@ async function save(documentId: string, doc: ProseMirrorNode): Promise<void> {
     plainText,
     countDocumentWords(doc),
   );
+  for (const listener of saveListeners) {
+    listener(documentId);
+  }
 }
 
 /**

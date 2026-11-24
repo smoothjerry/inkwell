@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { useProgressStore } from "@/features/stats";
 import { DIM_MODES, EDITOR_WIDTHS, THEMES, useSettingsStore } from "@/stores/settings-store";
+import { BookFormatPicker } from "./book-format-picker";
 import { FontPicker } from "./font-picker";
 import { GoalFields } from "./goal-fields";
 import { NumberField } from "./number-field";
@@ -63,6 +64,16 @@ export function SettingsView({ updates }: SettingsViewProps) {
               options={EDITOR_WIDTHS}
               value={settings.editorWidth}
               onChange={(editorWidth) => settings.update({ editorWidth })}
+            />
+          </SettingRow>
+          <SettingRow
+            title="Default book format"
+            description="Page counts for documents that are not in a book use this format."
+          >
+            <BookFormatPicker
+              label="Default book format"
+              value={settings.defaultBookFormat}
+              onChange={(defaultBookFormat) => settings.update({ defaultBookFormat })}
             />
           </SettingRow>
         </section>

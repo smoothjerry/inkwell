@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type MeasuredBlock, packPages } from "./pagination";
+import { type MeasuredBlock, packPages, pageRanges } from "./pagination";
 
 // Pages 10 lines tall, every line 10 px.
 const PAGE = 100;
@@ -97,5 +97,26 @@ describe("packPages", () => {
   it("splits a too-tall unsplittable block rather than loop", () => {
     const tall: MeasuredBlock = { ...paragraph(15), splittable: false };
     expect(packPages([tall], PAGE)).toHaveLength(2);
+  });
+});
+
+describe("pageRanges", () => {
+  it("numbers each chapter's pages after the chapters before it", () => {
+    expect(pageRanges([12, 30, 8])).toEqual([
+      { first: 1, last: 12 },
+      { first: 13, last: 42 },
+      { first: 43, last: 50 },
+    ]);
+  });
+
+  it("gives a one-page chapter a single page", () => {
+    expect(pageRanges([1, 1])).toEqual([
+      { first: 1, last: 1 },
+      { first: 2, last: 2 },
+    ]);
+  });
+
+  it("gives a book with no chapters no ranges", () => {
+    expect(pageRanges([])).toEqual([]);
   });
 });
