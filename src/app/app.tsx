@@ -4,6 +4,12 @@ import { EditorPane, subscribeToSessionWrites, WordCountStatus } from "@/feature
 import { EXPORT_COMMANDS, ExportDialog } from "@/features/export";
 import { CommandPalette, LibrarySidebar, useLibraryStore } from "@/features/library";
 import { OnboardingDialog } from "@/features/onboarding";
+import {
+  PAGE_COUNT_COMMANDS,
+  PageCountStatus,
+  PageCountsDialog,
+  usePageCount,
+} from "@/features/pages";
 import { SettingsView } from "@/features/settings";
 import {
   StatsView,
@@ -49,6 +55,7 @@ export function App() {
   useMenuEvents();
   useMenuChecks();
   useUpdateNotice();
+  usePageCount();
   const isUpdateWaiting = useUpdateStore((state) => state.waitingToken !== null);
 
   useEffect(() => {
@@ -128,16 +135,22 @@ export function App() {
         <WeekProgress />
         <StreakBadge />
         <TodayRing />
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center">
+          <PageCountStatus />
           <WordCountStatus />
         </div>
       </footer>
 
       {isZen && <ZenProgressLine />}
       <CommandPalette
-        extraCommands={isUpdateWaiting ? [...EXPORT_COMMANDS, RELAUNCH_COMMAND] : EXPORT_COMMANDS}
+        extraCommands={[
+          ...EXPORT_COMMANDS,
+          ...PAGE_COUNT_COMMANDS,
+          ...(isUpdateWaiting ? [RELAUNCH_COMMAND] : []),
+        ]}
       />
       <ExportDialog />
+      <PageCountsDialog />
       <OnboardingDialog />
       <Toaster theme={theme} position="bottom-right" />
     </div>

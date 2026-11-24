@@ -119,6 +119,23 @@ export async function getDocumentContent(id: string): Promise<string | null> {
   return rows[0]?.content ?? null;
 }
 
+/**
+ * When each document was last changed, by id. Page counts check this before
+ * loading any content, so a chapter that has not changed is never read.
+ */
+export async function listDocumentVersions(ids: readonly string[]): Promise<Map<string, number>> {
+  if (ids.length === 0) {
+    return new Map();
+  }
+  const db = await getDb();
+  const placeholders = ids.map((_, index) => `$${index + 1}`).join(", ");
+  const rows = await db.select<{ id: string; updatedAt: number }[]>(
+    `SELECT id, updated_at AS updatedAt FROM documents WHERE id IN (${placeholders})`,
+    [...ids],
+  );
+  return new Map(rows.map((row) => [row.id, row.updatedAt]));
+}
+
 export async function saveDocumentContent(
   id: string,
   content: string,

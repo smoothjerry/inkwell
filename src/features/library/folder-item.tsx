@@ -1,4 +1,13 @@
-import { BookOpen, ChevronRight, FilePlus, Folder, FolderPlus, Pencil, Trash2 } from "lucide-react";
+import {
+  BookOpen,
+  ChevronRight,
+  FilePlus,
+  Folder,
+  FolderPlus,
+  Hash,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -11,6 +20,7 @@ import { sortLibraryItems } from "@/domain/library-sort";
 import type { Folder as FolderRecord } from "@/lib/db";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settings-store";
+import { useViewStore } from "@/stores/view-store";
 import { BookFormatSubmenu } from "./book-format-submenu";
 import { DocumentItem } from "./document-item";
 import { InlineRenameInput } from "./inline-rename-input";
@@ -150,6 +160,15 @@ export function FolderItem({ folder, depth }: FolderItemProps) {
               canBeBook={canMarkAsBook(folder.id, folders)}
               onChange={(bookFormat) => actions.setBookFormat(folder.id, bookFormat)}
             />
+            {isBook && (
+              // The pages feature watches this; the library does not import it.
+              <ContextMenuItem
+                onSelect={() => useViewStore.getState().setPageCountsTarget({ bookId: folder.id })}
+              >
+                <Hash strokeWidth={1.5} aria-hidden="true" />
+                Page Counts…
+              </ContextMenuItem>
+            )}
             <ContextMenuSeparator />
             <ContextMenuItem variant="destructive" onSelect={() => actions.trashFolder(folder.id)}>
               <Trash2 strokeWidth={1.5} aria-hidden="true" />

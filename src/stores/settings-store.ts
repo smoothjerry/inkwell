@@ -1,5 +1,6 @@
 import { toast } from "sonner";
 import { create } from "zustand";
+import { type BookFormatId, DEFAULT_BOOK_FORMAT_ID, isBookFormatId } from "@/domain/book-formats";
 import { DEFAULT_FONT_ID, type FontId, toFontId } from "@/domain/fonts";
 import { LIBRARY_SORTS, type LibrarySort } from "@/domain/library-sort";
 import { getSettings, setSetting } from "@/lib/db";
@@ -28,6 +29,8 @@ export type Settings = {
   /** The font of documents that have not chosen one (DESIGN_SPEC §7.11). */
   editorFont: FontId;
   editorWidth: EditorWidth;
+  /** The print format of page counts for documents outside any book (DESIGN_SPEC §7.9). */
+  defaultBookFormat: BookFormatId;
   /** Whether the formatting toolbar is shown above the document (⌘⌥T). */
   showToolbar: boolean;
   /** Keep the caret line near the middle of the window while writing. */
@@ -55,6 +58,7 @@ const DEFAULTS: Settings = {
   weekStartsOn: 1,
   editorFont: DEFAULT_FONT_ID,
   editorWidth: "medium",
+  defaultBookFormat: DEFAULT_BOOK_FORMAT_ID,
   showToolbar: true,
   typewriterMode: false,
   dimMode: "off",
@@ -78,6 +82,7 @@ const VALIDATORS: { [Key in keyof Settings]: (value: unknown) => boolean } = {
     Number.isInteger(value) && (value as number) >= 0 && (value as number) <= 6,
   editorFont: (value) => toFontId(value) !== null,
   editorWidth: (value) => EDITOR_WIDTHS.includes(value as EditorWidth),
+  defaultBookFormat: isBookFormatId,
   showToolbar: (value) => typeof value === "boolean",
   typewriterMode: (value) => typeof value === "boolean",
   dimMode: (value) => DIM_MODES.includes(value as DimMode),

@@ -178,7 +178,7 @@ The editor's font library (DESIGN_SPEC §7.11) is defined as data in `src/domain
 
 ## Books and pages
 
-M10 (DESIGN_SPEC §7.9, §7.10) is being built: print formats, books, and the pagination engine so far.
+M10 (DESIGN_SPEC §7.9, §7.10) is being built: print formats, books, the pagination engine, and page counts so far.
 
 - The print formats are data in `src/domain/book-formats.ts`: trim, margins, type size, and line height for each preset. Sizes are written in inches or mm, as the spec gives them, and stored in points, the unit the pagination engine will lay pages out in. `textBlockSize` gives the area inside the margins.
 - A folder is a book when its `book_format` column (migration `002_books.sql`) holds a format id. The folder's context menu ▸ Book Format sets or clears it (`book-format-submenu.tsx`, `setBookFormat` in the library store), and a book's row shows a book icon.
@@ -191,6 +191,10 @@ M10 (DESIGN_SPEC §7.9, §7.10) is being built: print formats, books, and the pa
   - For a page that starts mid-paragraph, `lineStartOffset` finds the first character of the line with a binary search over `Range` rectangles; hard breaks count as one character, as in the document.
   - `paginateDocument` caches results per document, format, and `updated_at`, and shares a run that is still going.
   - The prototype's measurements are in the spec (§7.9).
+- **Page counts** (DESIGN_SPEC §7.9). `pageCountScope` gives what a count covers: the open document's book (by `containingBook` and `readingOrder`) in the book's format, or the document alone in the `defaultBookFormat` setting. `countPages` paginates its chapters one after another and turns their counts into page ranges (`pageRanges`, pure, tested). It first reads only each chapter's `updated_at` (`listDocumentVersions`), and `paginateDocument` loads content only on a cache miss, so an unchanged chapter is never read.
+  - `use-page-count.ts` recounts 300 ms after a save of one of the scope's chapters (`subscribeToSaves` in the autosaver), a document switch, a library change, or a default-format change; never on a keystroke. `PageCountStatus` shows `≈ 312 pages · pp. 41–52` in the status bar, with the format and why it is an estimate in its tooltip.
+  - The Page Counts dialog counts every format. It opens when `pageCountsTarget` is set in the view store, by a book's context menu or the palette, so the library never imports the pages feature.
+  - `src/features/pages/index.ts` exports only light pieces; the engine (`paginate.ts`, `count-pages.ts`) is loaded with `import()`, so it stays out of the startup bundle.
 
 ## Performance budgets
 
