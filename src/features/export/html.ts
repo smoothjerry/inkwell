@@ -1,5 +1,7 @@
 import { generateHTML, generateText, type JSONContent } from "@tiptap/react";
+import type { ResolvedDocumentStyle } from "@/domain/document-style";
 import { createEditorExtensions } from "@/features/editor";
+import { type ExportFonts, inlineRichStyles, namedFontFamily } from "./rich-styles";
 
 // Small, self-contained styles for an exported HTML file.
 const STYLES = `
@@ -24,20 +26,32 @@ export function escapeHtml(text: string): string {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-/** The document body as an HTML fragment. */
-export function toHtmlFragment(content: JSONContent): string {
-  return generateHTML(content, createEditorExtensions());
+/**
+ * The document body as an HTML fragment, its rich formatting as inline styles.
+ * `fonts` says how fonts are named; see `ExportFonts`.
+ */
+export function toHtmlFragment(content: JSONContent, fonts: ExportFonts = "named"): string {
+  return inlineRichStyles(generateHTML(content, createEditorExtensions()), fonts);
 }
 
-/** A complete HTML file: the title as a heading, then the body, with embedded styles. */
-export function toStandaloneHtml(title: string, content: JSONContent): string {
+/**
+ * A complete HTML file: the title as a heading, then the body, with embedded
+ * styles. The body uses the document's own font, size, and line spacing.
+ */
+export function toStandaloneHtml(
+  title: string,
+  content: JSONContent,
+  style: ResolvedDocumentStyle,
+): string {
+  const bodyStyle = `body { font-family: ${namedFontFamily(style.font.id)}; font-size: ${style.fontSize}pt; line-height: ${style.lineHeight}; }`;
   return `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(title)}</title>
-<style>${STYLES}</style>
+<style>${STYLES}${bodyStyle}
+</style>
 </head>
 <body>
 <h1>${escapeHtml(title)}</h1>

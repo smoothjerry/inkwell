@@ -1,11 +1,83 @@
 import type { JSONContent } from "@tiptap/react";
-import type { ParagraphChild, Paragraph as ParagraphType } from "docx";
+import type {
+  IParagraphOptions,
+  IRunOptions,
+  ParagraphChild,
+  Paragraph as ParagraphType,
+} from "docx";
+import { isFontSize, type ResolvedDocumentStyle } from "@/domain/document-style";
+import { fontById, toFontId } from "@/domain/fonts";
+import {
+  isHighlight,
+  isTextColor,
+  PRINT_HIGHLIGHTS,
+  PRINT_TEXT_COLORS,
+} from "@/domain/rich-formatting";
 
 type Docx = typeof import("docx");
 
 const MONO_FONT = "Courier New";
 const NUMBERED = "numbered";
 const INDENT_STEP = 720; // Twentieths of a point: half an inch.
+
+/** Word's line spacing unit: 240 is single spacing. */
+const SINGLE_LINE = 240;
+
+type Marks = Map<string, Record<string, unknown> | undefined>;
+
+/** A hex colour as Word wants it: no `#`. */
+function wordColor(hex: string): string {
+  return hex.replace("#", "").toUpperCase();
+}
+
+/**
+ * A text run's formatting from its marks (DESIGN_SPEC §7.11). Fonts are named,
+ * not embedded, so Word substitutes any that is not installed.
+ */
+export function runStyle(marks: Marks): IRunOptions {
+  const textStyle = marks.get("textStyle") ?? {};
+  const fontId = toFontId(textStyle.fontId);
+  const { textColor, highlight, fontSize } = textStyle;
+  return {
+    bold: marks.has("bold"),
+    italics: marks.has("italic"),
+    strike: marks.has("strike"),
+    underline: marks.has("underline") ? {} : undefined,
+    color: isTextColor(textColor) ? wordColor(PRINT_TEXT_COLORS[textColor]) : undefined,
+    shading: isHighlight(highlight)
+      ? { type: "clear", color: "auto", fill: wordColor(PRINT_HIGHLIGHTS[highlight]) }
+      : undefined,
+    font: marks.has("code") ? MONO_FONT : fontId === null ? undefined : fontById(fontId).name,
+    // Word measures in half-points.
+    size: isFontSize(fontSize) ? fontSize * 2 : undefined,
+  };
+}
+
+const ALIGNMENTS: Record<string, IParagraphOptions["alignment"]> = {
+  center: "center",
+  right: "right",
+  justify: "both",
+};
+
+/** A paragraph's or heading's alignment, and its block indent in twips. */
+export function blockStyle(attrs: Record<string, unknown> = {}): {
+  alignment: IParagraphOptions["alignment"];
+  indent: number;
+} {
+  const steps = Number(attrs.indent);
+  return {
+    alignment: ALIGNMENTS[String(attrs.textAlign)],
+    indent: Number.isInteger(steps) && steps > 0 ? steps * INDENT_STEP : 0,
+  };
+}
+
+/** The document's own font, size, and line spacing, as Word's defaults for all text. */
+export function documentDefaults(style: ResolvedDocumentStyle) {
+  return {
+    run: { font: style.font.name, size: style.fontSize * 2 },
+    paragraph: { spacing: { line: Math.round(style.lineSpacing * SINGLE_LINE) } },
+  };
+}
 
 type BlockContext = {
   /** Nesting depth inside lists. */
@@ -18,11 +90,16 @@ type BlockContext = {
 };
 
 /**
- * Converts a document to a Word file (DESIGN_SPEC §7.6): headings, lists,
- * quotes, code blocks, and links. The `docx` library is large, so it is
+ * Converts a document to a Word file (DESIGN_SPEC §7.6, §7.11): headings,
+ * lists, quotes, code blocks, links, and rich formatting, in the document's
+ * own font, size, and line spacing. The `docx` library is large, so it is
  * loaded only when this runs.
  */
-export async function toDocx(title: string, content: JSONContent): Promise<Uint8Array> {
+export async function toDocx(
+  title: string,
+  content: JSONContent,
+  style: ResolvedDocumentStyle,
+): Promise<Uint8Array> {
   const docx = await import("docx");
   let listInstances = 0;
 
@@ -31,14 +108,11 @@ export async function toDocx(title: string, content: JSONContent): Promise<Uint8
       if (node.type === "hardBreak") {
         return new docx.TextRun({ break: 1 });
       }
-      const marks = new Map((node.marks ?? []).map((mark) => [mark.type, mark.attrs]));
+      const marks: Marks = new Map((node.marks ?? []).map((mark) => [mark.type, mark.attrs]));
       const link = marks.get("link");
       const run = new docx.TextRun({
         text: node.text ?? "",
-        bold: marks.has("bold"),
-        italics: marks.has("italic"),
-        strike: marks.has("strike"),
-        font: marks.has("code") ? MONO_FONT : undefined,
+        ...runStyle(marks),
         style: link ? "Hyperlink" : undefined,
       });
       return link
@@ -47,9 +121,18 @@ export async function toDocx(title: string, content: JSONContent): Promise<Uint8
     });
   }
 
-  function paragraph(children: ParagraphChild[], context: BlockContext): ParagraphType {
+  function paragraph(
+    children: ParagraphChild[],
+    context: BlockContext,
+    attrs?: Record<string, unknown>,
+  ): ParagraphType {
     const { level, list } = context;
+    const block = blockStyle(attrs);
+    const contextIndent =
+      list === "task" || (context.isQuote && list === null) ? INDENT_STEP * (level + 1) : 0;
+    const left = contextIndent + block.indent;
     return new docx.Paragraph({
+      alignment: block.alignment,
       children:
         list === "task"
           ? [new docx.TextRun(context.isChecked ? "☑ " : "☐ "), ...children]
@@ -59,10 +142,7 @@ export async function toDocx(title: string, content: JSONContent): Promise<Uint8
         list === "ordered"
           ? { reference: NUMBERED, level, instance: context.listInstance }
           : undefined,
-      indent:
-        list === "task" || (context.isQuote && list === null)
-          ? { left: INDENT_STEP * (level + 1) }
-          : undefined,
+      indent: left > 0 ? { left } : undefined,
       border: context.isQuote
         ? { left: { style: docx.BorderStyle.SINGLE, size: 12, color: "D4D4D4", space: 8 } }
         : undefined,
@@ -72,15 +152,19 @@ export async function toDocx(title: string, content: JSONContent): Promise<Uint8
   function blocks(nodes: JSONContent[] = [], context: BlockContext): ParagraphType[] {
     return nodes.flatMap((node): ParagraphType[] => {
       switch (node.type) {
-        case "heading":
+        case "heading": {
+          const { alignment, indent } = blockStyle(node.attrs);
           return [
             new docx.Paragraph({
               children: inline(node.content),
               heading: headingLevel(docx, Number(node.attrs?.level ?? 1)),
+              alignment,
+              indent: indent > 0 ? { left: indent } : undefined,
             }),
           ];
+        }
         case "paragraph":
-          return [paragraph(inline(node.content), context)];
+          return [paragraph(inline(node.content), context, node.attrs)];
         case "blockquote":
           return blocks(node.content, { ...context, isQuote: true });
         case "bulletList":
@@ -122,6 +206,7 @@ export async function toDocx(title: string, content: JSONContent): Promise<Uint8
 
   const document = new docx.Document({
     title,
+    styles: { default: { document: documentDefaults(style) } },
     numbering: {
       config: [
         {

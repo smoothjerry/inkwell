@@ -1,12 +1,16 @@
 import { describe, expect, it } from "vitest";
 import {
   commonValue,
+  HIGHLIGHTS,
   isHighlight,
   isTextColor,
   markValue,
+  PRINT_HIGHLIGHTS,
+  PRINT_TEXT_COLORS,
   runFontSize,
   stepFontSize,
   stepIndent,
+  TEXT_COLORS,
 } from "./rich-formatting";
 
 describe("colour names", () => {
@@ -82,5 +86,16 @@ describe("commonValue", () => {
   it("gives null for mixed values or none", () => {
     expect(commonValue(["lora", "inter"])).toBeNull();
     expect(commonValue([])).toBeNull();
+  });
+});
+
+describe("print colours", () => {
+  it("give every colour and highlight a hex value", () => {
+    for (const name of TEXT_COLORS) {
+      expect(PRINT_TEXT_COLORS[name]).toMatch(/^#[0-9a-f]{6}$/);
+    }
+    for (const name of HIGHLIGHTS) {
+      expect(PRINT_HIGHLIGHTS[name]).toMatch(/^#[0-9a-f]{6}$/);
+    }
   });
 });

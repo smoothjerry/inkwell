@@ -2,9 +2,11 @@ import { save } from "@tauri-apps/plugin-dialog";
 import { writeFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import type { JSONContent } from "@tiptap/react";
 import { toast } from "sonner";
+import { type ResolvedDocumentStyle, resolveDocumentStyle } from "@/domain/document-style";
 import { flushAutosaves } from "@/features/editor";
 import { useLibraryStore } from "@/features/library";
 import { getDocumentContent } from "@/lib/db";
+import { useSettingsStore } from "@/stores/settings-store";
 import { toDocx } from "./docx";
 
 export const EXPORT_FORMATS = [
@@ -20,6 +22,19 @@ export type ExportFormat = (typeof EXPORT_FORMATS)[number]["id"];
 /** Characters that are not allowed in file names on at least one platform. */
 function toFileName(title: string): string {
   return title.replace(/[\\/:*?"<>|]/g, "-").trim() || "Untitled";
+}
+
+/** The document's own font, size, and line spacing, else the setting and defaults (§7.11). */
+function documentStyleOf(content: JSONContent): ResolvedDocumentStyle {
+  const attrs = content.attrs ?? {};
+  return resolveDocumentStyle(
+    {
+      fontId: attrs.fontId ?? null,
+      fontSize: attrs.fontSize ?? null,
+      lineSpacing: attrs.lineSpacing ?? null,
+    },
+    useSettingsStore.getState().editorFont,
+  );
 }
 
 /**
@@ -43,10 +58,11 @@ export async function exportDocument(documentId: string, formatId: ExportFormat)
       throw new Error(`Document ${documentId} not found`);
     }
     const content = JSON.parse(raw) as JSONContent;
+    const style = documentStyleOf(content);
 
     if (format.id === "pdf") {
       const { printDocument } = await import("./print-document");
-      printDocument(title, content);
+      printDocument(title, content, style);
       return;
     }
 
@@ -59,7 +75,7 @@ export async function exportDocument(documentId: string, formatId: ExportFormat)
     }
 
     if (format.id === "docx") {
-      await writeFile(path, await toDocx(title, content));
+      await writeFile(path, await toDocx(title, content, style));
     } else {
       // The converters and their Tiptap schema load only when first used (§9).
       const [{ toMarkdown }, { toPlainText, toStandaloneHtml }] = await Promise.all([
@@ -70,7 +86,7 @@ export async function exportDocument(documentId: string, formatId: ExportFormat)
         format.id === "markdown"
           ? toMarkdown(content)
           : format.id === "html"
-            ? toStandaloneHtml(title, content)
+            ? toStandaloneHtml(title, content, style)
             : toPlainText(content);
       await writeTextFile(path, text);
     }

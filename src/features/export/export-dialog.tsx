@@ -50,6 +50,11 @@ export function ExportDialog() {
             </Button>
           ))}
         </div>
+        {/* DESIGN_SPEC §7.11: say what Markdown cannot hold. */}
+        <p className="text-muted-foreground">
+          Markdown keeps text and structure only: underline, alignment, indents, colour, highlight,
+          fonts, and sizes are left out.
+        </p>
       </DialogContent>
     </Dialog>
   );

@@ -79,3 +79,40 @@ describe("Markdown round trip", () => {
     expect(fromMarkdown(toMarkdown(content))).toEqual(content);
   });
 });
+
+describe("Markdown export of rich formatting", () => {
+  it("keeps the text and structure but leaves the rich formatting out", () => {
+    const content: JSONContent = {
+      type: "doc",
+      content: [
+        {
+          type: "heading",
+          attrs: { level: 2, textAlign: "center", indent: 1 },
+          content: [{ type: "text", text: "Centred" }],
+        },
+        {
+          type: "paragraph",
+          attrs: { textAlign: "right", indent: 2 },
+          content: [
+            { type: "text", text: "plain " },
+            { type: "text", text: "underlined", marks: [{ type: "underline" }] },
+            { type: "text", text: " " },
+            {
+              type: "text",
+              text: "styled",
+              marks: [
+                { type: "bold" },
+                {
+                  type: "textStyle",
+                  attrs: { textColor: "red", highlight: "yellow", fontId: "lora", fontSize: 18 },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    expect(toMarkdown(content)).toBe("## Centred\n\nplain underlined **styled**\n");
+  });
+});
