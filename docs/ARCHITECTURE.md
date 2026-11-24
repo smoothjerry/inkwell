@@ -178,12 +178,19 @@ The editor's font library (DESIGN_SPEC §7.11) is defined as data in `src/domain
 
 ## Books and pages
 
-M10 (DESIGN_SPEC §7.9, §7.10) is being built.
+M10 (DESIGN_SPEC §7.9, §7.10) is being built: print formats, books, and the pagination engine so far.
 
 - The print formats are data in `src/domain/book-formats.ts`: trim, margins, type size, and line height for each preset. Sizes are written in inches or mm, as the spec gives them, and stored in points, the unit the pagination engine will lay pages out in. `textBlockSize` gives the area inside the margins.
 - A folder is a book when its `book_format` column (migration `002_books.sql`) holds a format id. The folder's context menu ▸ Book Format sets or clears it (`book-format-submenu.tsx`, `setBookFormat` in the library store), and a book's row shows a book icon.
 - The rules are pure functions in `src/domain/books.ts`. `canMarkAsBook` and `wouldNestBooks` keep one book from containing another; the Book Format menu, Move to, `moveFolder`, and `planDrop` (drag-and-drop) all apply them. Restoring a folder from the trash can still nest a book (its ancestor became a book while it was trashed); `restoreFolder` then makes the inner book a folder again, with a toast.
 - `readingOrder` lists a book's chapters: depth-first, in manual order, subfolders (parts) before a folder's own documents, as the sidebar shows them in manual sort. The sidebar's sort mode does not change it, and trashed documents are left out.
+- **Pagination engine** (`src/features/pages/`, DESIGN_SPEC §7.9). `paginate(content, format)` returns the page count and the break positions (the document position where each page's first line starts). It measures, then packs:
+  - `measure-blocks.ts` renders each top-level block into a hidden `.book-text` box of the format's text-block width, at 96 px per inch, in batches, yielding to the main thread after about 8 ms. It records each text block's (paragraph, heading, code block) line count, line height, and offset, and the block's margins. Results are cached per block and format, so after an edit only changed blocks are measured.
+  - `book-typography.css` is the format's typography, meant to be shared with the paged view. Only top-level blocks have margins, so a block measured alone has its height in the document, and the gap between blocks is the larger margin. Paragraphs that open the document or follow a heading are marked `book-no-indent` by the engine, since a block measured alone has no siblings.
+  - `packPages` in `src/domain/pagination.ts` (pure, tested) fills pages: headings keep with the next block's first lines, and splits leave at least two lines on each side.
+  - For a page that starts mid-paragraph, `lineStartOffset` finds the first character of the line with a binary search over `Range` rectangles; hard breaks count as one character, as in the document.
+  - `paginateDocument` caches results per document, format, and `updated_at`, and shares a run that is still going.
+  - The prototype's measurements are in the spec (§7.9).
 
 ## Performance budgets
 

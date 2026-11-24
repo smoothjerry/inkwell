@@ -1,0 +1,146 @@
+/*
+ * A print format's typography (DESIGN_SPEC §7.9, §7.10), shared by the
+ * pagination engine's measuring box and the paged view, so a page count
+ * always matches the pages on screen. The format sets --book-font-size and
+ * --book-line-height; the width is the format's text block.
+ *
+ * Only top-level blocks (the direct children of .book-text) have margins.
+ * Everything inside them has none, so a block measured on its own has the
+ * same height as in the document, and the space between two blocks is the
+ * larger of their two margins.
+ */
+
+.book-text {
+  font-family: "Newsreader Variable", Georgia, serif;
+  font-size: var(--book-font-size);
+  line-height: var(--book-line-height);
+  font-kerning: normal;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+/* A document's own font and size, and per-selection ones, do not apply here. */
+.book-text [data-font],
+.book-text [data-size] {
+  /* biome-ignore lint/complexity/noImportantStyles: beats the marks' inline styles. */
+  font-family: inherit !important;
+  /* biome-ignore lint/complexity/noImportantStyles: beats the marks' inline styles. */
+  font-size: inherit !important;
+}
+
+.book-text * {
+  margin: 0;
+}
+
+/* Book paragraphs: no space between them, a first-line indent instead. */
+.book-text p {
+  text-indent: 1.5em;
+}
+
+/* An empty paragraph is a blank line. */
+.book-text p:empty::after {
+  content: "\00a0";
+}
+
+/*
+ * No indent on the first paragraph or one after a heading. The engine marks
+ * those with a class, since a block measured on its own has no siblings.
+ */
+.book-text > p.book-no-indent,
+.book-text li p,
+.book-text blockquote p:first-child {
+  text-indent: 0;
+}
+
+.book-text h1,
+.book-text h2,
+.book-text h3 {
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.book-text h1 {
+  font-size: 1.64em;
+}
+
+.book-text h2 {
+  font-size: 1.27em;
+}
+
+.book-text h3 {
+  font-size: 1.09em;
+}
+
+/* Margins on top-level blocks only (see above). */
+.book-text > h1,
+.book-text > h2,
+.book-text > h3 {
+  margin: 1.5em 0 0.75em;
+}
+
+.book-text > blockquote,
+.book-text > ul,
+.book-text > ol,
+.book-text > pre,
+.book-text > hr {
+  margin: 0.75em 0;
+}
+
+.book-text ul,
+.book-text ol {
+  padding-left: 1.5em;
+}
+
+.book-text ul {
+  list-style: disc;
+}
+
+.book-text ol {
+  list-style: decimal;
+}
+
+.book-text ul[data-type="taskList"] {
+  padding-left: 0;
+  list-style: none;
+}
+
+.book-text ul[data-type="taskList"] li {
+  display: flex;
+  gap: 0.5em;
+}
+
+.book-text blockquote {
+  padding-left: 1em;
+}
+
+.book-text pre {
+  font-family: "Geist Mono", Menlo, monospace;
+  font-size: 0.86em;
+  white-space: pre-wrap;
+}
+
+.book-text hr {
+  border: 0;
+  border-top: 1px solid currentColor;
+}
+
+/* Block indent, as in the editor: steps of 0.5 in. */
+.book-text [data-indent="1"] {
+  margin-left: 0.5in;
+}
+
+.book-text [data-indent="2"] {
+  margin-left: 1in;
+}
+
+.book-text [data-indent="3"] {
+  margin-left: 1.5in;
+}
+
+.book-text [data-indent="4"] {
+  margin-left: 2in;
+}
+
+.book-text [data-indent="5"] {
+  margin-left: 2.5in;
+}

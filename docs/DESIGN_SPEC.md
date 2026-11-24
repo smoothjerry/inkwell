@@ -2,7 +2,7 @@
 
 > **Working name:** "Inkwell" is a placeholder. Find/replace `Inkwell` / `inkwell` before the first commit if you rename it.
 > **Audience:** This document is the build brief for an AI coding session (Fable). It is prescriptive where decisions were made and marks open items explicitly.
-> **Status:** Draft v1.4 · 2026-11-23. M0–M9 are built. v1.4 adds an in-app notice when a newer build of Inkwell has been installed, with Relaunch (§7.12), to be built as M9.6 (§11). v1.3 adds a formatting toolbar, richer formatting, and a bundled font library (§7.11), to be built as M9.5 (§11.2) before M10. v1.2 added books, print formats, page counts, and a paged view (§7.9, §7.10), to be built as M10 (§11.3). v1.1 moved the features that earlier milestones specified but did not deliver into M9 (§11.1), added single-item permanent delete (§7.2), and recorded the focus shortcuts added in M6 (§7.7).
+> **Status:** Draft v1.4 · 2026-11-24 (pagination technique recorded in §7.9). M0–M9 are built. v1.4 adds an in-app notice when a newer build of Inkwell has been installed, with Relaunch (§7.12), to be built as M9.6 (§11). v1.3 adds a formatting toolbar, richer formatting, and a bundled font library (§7.11), to be built as M9.5 (§11.2) before M10. v1.2 added books, print formats, page counts, and a paged view (§7.9, §7.10), to be built as M10 (§11.3). v1.1 moved the features that earlier milestones specified but did not deliver into M9 (§11.1), added single-item permanent delete (§7.2), and recorded the focus shortcuts added in M6 (§7.7).
 
 ---
 
@@ -371,7 +371,8 @@ First launch: a 2-step modal — (1) pick weekly goal (presets), optional daily 
 **Pagination engine.** One engine, in `src/features/pages/`, serves both the counts and the paged view (§7.10), so a count always matches the pages on screen.
 - Input: a document and a format. Output: the page breaks, as positions in the document, and the page count.
 - Rules: each chapter starts on a new page. Headings stay with the paragraph after them. A paragraph leaves at least two lines at the bottom of a page and carries at least two to the next (widow and orphan control).
-- Suggested technique, to be proven by a prototype first: lay a hidden copy of the document out in the format's typography inside a box of the page's text-block size, using CSS multi-column so that the browser breaks it into columns; each column is a page. Map the first line of each column back to a document position.
+- Technique (chosen by prototype, M10): measure, then pack. Each top-level block is laid out in a hidden box of the text-block width in the format's typography, in short idle slices, and its text blocks' line counts, line heights, and spacing are recorded, cached per block and format. A pure function then fills pages with those lines under the rules above. For a page that starts mid-paragraph, the first character of its first line is found from the layout. CSS multi-column, the first idea, was kept only as a check: it agrees on page counts, but it lays the whole document out at once, needs a full relayout after every edit, and leaves the keep-with-next and widow rules to each browser.
+- Measured on an Apple Silicon Mac in WebKit (Safari), trade 6 × 9: 50k words in 40 ms, longest task 12 ms, 18 ms after a one-word edit; 100k words in 75 ms, longest task 14 ms. Page counts matched the multi-column layout in WebKit and Chromium; the two browsers differ by up to one page at 100k words, since each renders text its own way.
 - Results are cached per document, format, and `updated_at`, and computed off the keystroke path (§9).
 
 ### 7.10 Paged view
