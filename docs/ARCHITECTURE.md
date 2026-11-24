@@ -181,6 +181,9 @@ The editor's font library (DESIGN_SPEC §7.11) is defined as data in `src/domain
 M10 (DESIGN_SPEC §7.9, §7.10) is being built.
 
 - The print formats are data in `src/domain/book-formats.ts`: trim, margins, type size, and line height for each preset. Sizes are written in inches or mm, as the spec gives them, and stored in points, the unit the pagination engine will lay pages out in. `textBlockSize` gives the area inside the margins.
+- A folder is a book when its `book_format` column (migration `002_books.sql`) holds a format id. The folder's context menu ▸ Book Format sets or clears it (`book-format-submenu.tsx`, `setBookFormat` in the library store), and a book's row shows a book icon.
+- The rules are pure functions in `src/domain/books.ts`. `canMarkAsBook` and `wouldNestBooks` keep one book from containing another; the Book Format menu, Move to, `moveFolder`, and `planDrop` (drag-and-drop) all apply them. Restoring a folder from the trash can still nest a book (its ancestor became a book while it was trashed); `restoreFolder` then makes the inner book a folder again, with a toast.
+- `readingOrder` lists a book's chapters: depth-first, in manual order, subfolders (parts) before a folder's own documents, as the sidebar shows them in manual sort. The sidebar's sort mode does not change it, and trashed documents are left out.
 
 ## Performance budgets
 

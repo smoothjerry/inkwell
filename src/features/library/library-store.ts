@@ -1,5 +1,6 @@
 import { toast } from "sonner";
 import { create } from "zustand";
+import { canMarkAsBook, nestedBooks, wouldNestBooks } from "@/domain/books";
 import type { DocumentSummary, Folder } from "@/lib/db";
 import * as db from "@/lib/db";
 import { useViewStore } from "@/stores/view-store";
@@ -27,7 +28,10 @@ type LibraryState = {
   renameFolder: (id: string, name: string) => Promise<void>;
   /** Without a `sortOrder`, the item goes to the end of its new parent. */
   moveDocument: (id: string, folderId: string | null, sortOrder?: number | null) => Promise<void>;
+  /** Refused, with a toast, when it would put one book inside another (DESIGN_SPEC §7.9). */
   moveFolder: (id: string, parentId: string | null, sortOrder?: number | null) => Promise<void>;
+  /** Makes a folder a book in a print format, or, with null, an ordinary folder again. */
+  setBookFormat: (id: string, bookFormat: string | null) => Promise<void>;
   setDocumentPinned: (id: string, pinned: boolean) => Promise<void>;
   trashDocument: (id: string) => Promise<void>;
   trashFolder: (id: string) => Promise<void>;
@@ -141,11 +145,26 @@ export const useLibraryStore = create<LibraryState>((set, get) => {
         expand(folderId);
       }),
 
-    moveFolder: (id, parentId, sortOrder = null) =>
-      mutate("Could not move the folder.", async () => {
+    moveFolder: (id, parentId, sortOrder = null) => {
+      if (wouldNestBooks(id, parentId, get().folders)) {
+        toast.error("A book can't go inside another book.");
+        return Promise.resolve();
+      }
+      return mutate("Could not move the folder.", async () => {
         await db.moveFolder(id, parentId, sortOrder);
         expand(parentId);
-      }),
+      });
+    },
+
+    setBookFormat: (id, bookFormat) => {
+      if (bookFormat !== null && !canMarkAsBook(id, get().folders)) {
+        toast.error("A book can't contain another book.");
+        return Promise.resolve();
+      }
+      return mutate("Could not change the book format.", () =>
+        db.setFolderBookFormat(id, bookFormat),
+      );
+    },
 
     setDocumentPinned: (id, pinned) =>
       mutate("Could not update the pin.", () => db.setDocumentPinned(id, pinned)),
@@ -159,7 +178,18 @@ export const useLibraryStore = create<LibraryState>((set, get) => {
     restoreDocument: (id) =>
       mutate("Could not restore the document.", () => db.restoreDocument(id)),
 
-    restoreFolder: (id) => mutate("Could not restore the folder.", () => db.restoreFolder(id)),
+    restoreFolder: (id) =>
+      mutate("Could not restore the folder.", async () => {
+        await db.restoreFolder(id);
+        // A book restored into a book that was made since: it becomes a folder again.
+        const nested = nestedBooks(await db.listFolders());
+        for (const folderId of nested) {
+          await db.setFolderBookFormat(folderId, null);
+        }
+        if (nested.length > 0) {
+          toast("A restored book was inside another book, so it is a folder again.");
+        }
+      }),
 
     deleteDocumentForever: (id) =>
       mutate("Could not delete the document.", () => db.deleteDocumentForever(id)),

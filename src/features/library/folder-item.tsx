@@ -1,4 +1,4 @@
-import { ChevronRight, FilePlus, Folder, FolderPlus, Pencil, Trash2 } from "lucide-react";
+import { BookOpen, ChevronRight, FilePlus, Folder, FolderPlus, Pencil, Trash2 } from "lucide-react";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -6,10 +6,12 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
+import { canMarkAsBook, wouldNestBooks } from "@/domain/books";
 import { sortLibraryItems } from "@/domain/library-sort";
 import type { Folder as FolderRecord } from "@/lib/db";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settings-store";
+import { BookFormatSubmenu } from "./book-format-submenu";
 import { DocumentItem } from "./document-item";
 import { InlineRenameInput } from "./inline-rename-input";
 import { useLibraryStore } from "./library-store";
@@ -50,6 +52,9 @@ export function FolderItem({ folder, depth }: FolderItemProps) {
     (doc) => doc.title,
   );
   const indent = { paddingLeft: 8 + depth * 14 };
+  // A book shows a book icon instead of a folder icon (DESIGN_SPEC §7.9).
+  const isBook = folder.bookFormat !== null;
+  const FolderIcon = isBook ? BookOpen : Folder;
 
   const icons = (
     <>
@@ -61,7 +66,7 @@ export function FolderItem({ folder, depth }: FolderItemProps) {
         strokeWidth={1.5}
         aria-hidden="true"
       />
-      <Folder
+      <FolderIcon
         className="size-4 shrink-0 text-muted-foreground"
         strokeWidth={1.5}
         aria-hidden="true"
@@ -107,6 +112,7 @@ export function FolderItem({ folder, depth }: FolderItemProps) {
             >
               {icons}
               <span className="truncate">{folder.name}</span>
+              {isBook && <span className="sr-only">(book)</span>}
               {(dnd.zone === "before" || dnd.zone === "after") && (
                 <span
                   className={cn(
@@ -136,7 +142,13 @@ export function FolderItem({ folder, depth }: FolderItemProps) {
             <MoveToSubmenu
               targets={moveTargets(folders, folder.id)}
               currentId={folder.parentId}
+              isAllowed={(parentId) => !wouldNestBooks(folder.id, parentId, folders)}
               onMove={(parentId) => actions.moveFolder(folder.id, parentId)}
+            />
+            <BookFormatSubmenu
+              value={folder.bookFormat}
+              canBeBook={canMarkAsBook(folder.id, folders)}
+              onChange={(bookFormat) => actions.setBookFormat(folder.id, bookFormat)}
             />
             <ContextMenuSeparator />
             <ContextMenuItem variant="destructive" onSelect={() => actions.trashFolder(folder.id)}>

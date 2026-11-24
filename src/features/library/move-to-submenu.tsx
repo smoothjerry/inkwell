@@ -11,10 +11,12 @@ type MoveToSubmenuProps = {
   targets: MoveTarget[];
   /** Where the item is now; that target is shown disabled. */
   currentId: string | null;
+  /** False for a target the item may not go into; it is shown disabled. */
+  isAllowed?: (targetId: string | null) => boolean;
   onMove: (targetId: string | null) => void;
 };
 
-export function MoveToSubmenu({ targets, currentId, onMove }: MoveToSubmenuProps) {
+export function MoveToSubmenu({ targets, currentId, isAllowed, onMove }: MoveToSubmenuProps) {
   return (
     <ContextMenuSub>
       <ContextMenuSubTrigger>
@@ -25,7 +27,7 @@ export function MoveToSubmenu({ targets, currentId, onMove }: MoveToSubmenuProps
         {targets.map((target) => (
           <ContextMenuItem
             key={target.id ?? "root"}
-            disabled={target.id === currentId}
+            disabled={target.id === currentId || isAllowed?.(target.id) === false}
             onSelect={() => onMove(target.id)}
           >
             {target.label}

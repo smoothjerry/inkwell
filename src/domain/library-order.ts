@@ -6,6 +6,8 @@
  * others gives it a number between theirs and no other row changes.
  */
 
+import { wouldNestBooks } from "./books";
+
 export type ItemKind = "folder" | "document";
 
 /** A folder or document as the tree sees it. */
@@ -14,6 +16,8 @@ export type TreeItem = {
   id: string;
   parentId: string | null;
   sortOrder: number;
+  /** A folder's print format when it is a book (DESIGN_SPEC §7.9). */
+  bookFormat?: string | null;
 };
 
 /** Where on a row an item is dropped. */
@@ -75,10 +79,26 @@ export function isSameOrDescendant(
 
 /**
  * Where `dragged` goes when dropped on `target`, or null when the drop is not
- * allowed: onto itself, a folder into itself or a descendant, or a folder
- * next to a document (folders and documents are ordered separately).
+ * allowed: onto itself, a folder into itself or a descendant, a folder next
+ * to a document (folders and documents are ordered separately), or a folder
+ * whose move would put one book inside another.
  */
 export function planDrop(
+  dragged: TreeItem,
+  target: DropTarget,
+  folders: readonly TreeItem[],
+  documents: readonly TreeItem[],
+): DropPlan | null {
+  const plan = planPlacement(dragged, target, folders, documents);
+  if (plan === null || dragged.kind !== "folder") {
+    return plan;
+  }
+  const links = folders.map((folder) => ({ ...folder, bookFormat: folder.bookFormat ?? null }));
+  return wouldNestBooks(dragged.id, plan.parentId, links) ? null : plan;
+}
+
+/** Where `dragged` goes, by position alone; `planDrop` adds the book rule. */
+function planPlacement(
   dragged: TreeItem,
   target: DropTarget,
   folders: readonly TreeItem[],
