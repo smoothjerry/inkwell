@@ -90,6 +90,14 @@ Every feature in the design spec exists, and the M9 polish and release work is d
 
 `src/app/use-close-flush.ts` holds the single close-requested listener. It saves pending edits and ends the session before the window closes. Tauri closes the window as soon as any one listener finishes, so there must be only one.
 
+### Update notice
+
+DESIGN_SPEC §7.12. `src-tauri/src/update_check.rs` records the executable's inode and modification time at launch. The `installed_update` command compares them with the file now at that path and returns a token naming the new build, or `None` when the file is unchanged, missing, or on Windows.
+
+- `src/app/use-update-notice.ts` calls it on the window `focus` event only, so idle CPU stays at zero. A new token goes into `src/stores/update-store.ts` and shows a persistent sonner toast; closing it records that token as dismissed. In zen mode the toast is hidden until zen mode ends.
+- Relaunch calls `flushPendingWork()`, which resolves false if an edit could not be saved; then the app stays open with the save-error toast. Otherwise the `relaunch` command calls Tauri's `AppHandle::restart()`, which starts the executable now at the app's path. No process plugin is needed.
+- While an update is waiting, the command palette also lists "Relaunch to Update".
+
 ## Goals and the streak
 
 - The rules are pure functions: `src/domain/weeks.ts` (week boundaries, goal snapshots, the week-start change) and `src/domain/streak.ts`. Dates are local calendar dates as `YYYY-MM-DD` strings and all arithmetic is on calendar days, so daylight-saving changes cannot move a week boundary.

@@ -16,6 +16,7 @@ import {
 import { closeStaleSessions } from "@/lib/db";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settings-store";
+import { useUpdateStore } from "@/stores/update-store";
 import { useViewStore } from "@/stores/view-store";
 import { runBackup } from "./run-backup";
 import { SidebarNav } from "./sidebar-nav";
@@ -24,6 +25,7 @@ import { useCloseFlush } from "./use-close-flush";
 import { useMenuChecks } from "./use-menu-checks";
 import { useMenuEvents } from "./use-menu-events";
 import { useTheme } from "./use-theme";
+import { RELAUNCH_COMMAND, useUpdateNotice } from "./use-update-notice";
 import { useZenEscape } from "./use-zen-escape";
 
 /** How long after start-up the backup check runs. */
@@ -45,6 +47,8 @@ export function App() {
   useZenEscape();
   useMenuEvents();
   useMenuChecks();
+  useUpdateNotice();
+  const isUpdateWaiting = useUpdateStore((state) => state.waitingToken !== null);
 
   useEffect(() => {
     void useLibraryStore.getState().load();
@@ -129,7 +133,9 @@ export function App() {
       </footer>
 
       {isZen && <ZenProgressLine />}
-      <CommandPalette extraCommands={EXPORT_COMMANDS} />
+      <CommandPalette
+        extraCommands={isUpdateWaiting ? [...EXPORT_COMMANDS, RELAUNCH_COMMAND] : EXPORT_COMMANDS}
+      />
       <ExportDialog />
       <OnboardingDialog />
       <Toaster theme={theme} position="bottom-right" />

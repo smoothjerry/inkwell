@@ -65,7 +65,7 @@ Use the latest stable versions at build time within these majors; pin exact vers
 
 **Shell / native**
 - Tauri 2.x (Rust stable, edition 2021)
-- Plugins: `tauri-plugin-sql` (sqlite), `tauri-plugin-dialog`, `tauri-plugin-fs`, `tauri-plugin-window-state`, `tauri-plugin-process` (relaunch, §7.12), `tauri-plugin-store` (settings, optional — settings may also live in SQLite; pick one, prefer SQLite)
+- Plugins: `tauri-plugin-sql` (sqlite), `tauri-plugin-dialog`, `tauri-plugin-fs`, `tauri-plugin-window-state`, `tauri-plugin-store` (settings, optional — settings may also live in SQLite; pick one, prefer SQLite)
 
 **Frontend**
 - React 19, TypeScript 5.x (`strict: true`, `noUncheckedIndexedAccess: true`)
@@ -448,7 +448,7 @@ When a newer build of Inkwell replaces the one that is running, the app says so 
 - In zen mode the notice waits until zen mode ends.
 
 **Relaunch.**
-- Relaunch first runs the same flush as quitting (pending autosave, open session), then restarts the app with `tauri-plugin-process`, which starts the executable now at the app's path: the new build.
+- Relaunch first runs the same flush as quitting (pending autosave, open session), then restarts the app with Tauri's built-in `AppHandle::restart()` (no process plugin is needed), which starts the executable now at the app's path: the new build.
 - If the flush fails, the app does not restart and shows the usual save-error toast.
 
 **Later.** When auto-update arrives (§13), a downloaded update uses the same notice, with "Restart to Update" for an update that is installed on restart.
