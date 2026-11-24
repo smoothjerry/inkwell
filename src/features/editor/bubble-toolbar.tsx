@@ -2,16 +2,12 @@ import { type Editor, useEditorState } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
 import { Bold, Heading1, Heading2, Italic, Link, type LucideIcon, TextQuote } from "lucide-react";
 import { useState } from "react";
+import { normalizeUrl } from "@/domain/link-url";
 import { cn } from "@/lib/utils";
 
 type BubbleToolbarProps = {
   editor: Editor;
 };
-
-function normalizeUrl(value: string): string {
-  const url = value.trim();
-  return url === "" || /^[a-z][a-z0-9+.-]*:/i.test(url) ? url : `https://${url}`;
-}
 
 /** Formatting toolbar shown above a text selection. */
 export function BubbleToolbar({ editor }: BubbleToolbarProps) {

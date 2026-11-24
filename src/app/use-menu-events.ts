@@ -55,6 +55,9 @@ function runMenuAction(action: string) {
     case "zen":
       view.setZen(!view.isZen);
       break;
+    case "toolbar":
+      settings.update({ showToolbar: !settings.showToolbar });
+      break;
     case "typewriter":
       settings.update({ typewriterMode: !settings.typewriterMode });
       break;

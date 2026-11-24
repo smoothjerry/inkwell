@@ -93,3 +93,12 @@ export function runFontSize(markSize: unknown, documentSize: number): number {
 export function markValue<T extends string | number>(chosen: T, documentValue: T): T | null {
   return chosen === documentValue ? null : chosen;
 }
+
+/**
+ * The one value all of `values` share, or null when they differ or there are
+ * none. The toolbar's pickers show a blank for a selection that mixes values.
+ */
+export function commonValue<T>(values: readonly T[]): T | null {
+  const [first] = values;
+  return first !== undefined && values.every((value) => value === first) ? first : null;
+}

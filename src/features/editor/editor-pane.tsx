@@ -28,6 +28,9 @@ export function EditorPane() {
   const editorWidth = useSettingsStore((state) => state.editorWidth);
   const typewriterMode = useSettingsStore((state) => state.typewriterMode);
   const [loaded, setLoaded] = useState<{ id: string; content: JSONContent } | null>(null);
+  // The formatting toolbar sits here, above the scrolling document; the
+  // editor fills it, since the toolbar needs the editor instance.
+  const [toolbarSlot, setToolbarSlot] = useState<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (documentId === null) {
@@ -64,15 +67,23 @@ export function EditorPane() {
   }
 
   return (
-    <div className="editor-scroll min-h-0 flex-1 overflow-y-auto">
-      <div
-        className="editor-column"
-        data-font={editorFont}
-        data-width={editorWidth}
-        data-typewriter={typewriterMode}
-      >
-        <DocumentEditor key={documentId} documentId={documentId} initialContent={loaded.content} />
+    <>
+      <div ref={setToolbarSlot} className="shrink-0" />
+      <div className="editor-scroll min-h-0 flex-1 overflow-y-auto">
+        <div
+          className="editor-column"
+          data-font={editorFont}
+          data-width={editorWidth}
+          data-typewriter={typewriterMode}
+        >
+          <DocumentEditor
+            key={documentId}
+            documentId={documentId}
+            initialContent={loaded.content}
+            toolbarSlot={toolbarSlot}
+          />
+        </div>
       </div>
-    </div>
+    </>
   );
 }

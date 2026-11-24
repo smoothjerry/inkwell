@@ -1,9 +1,12 @@
 import type { Editor } from "@tiptap/react";
 import { toFontId } from "@/domain/fonts";
 import { isHighlight, isTextColor } from "@/domain/rich-formatting";
+import { useLinkDialogStore } from "./link-dialog-store";
 import {
   indent,
+  type ParagraphStyle,
   setHighlight,
+  setParagraphStyle,
   setSelectionFont,
   setSelectionSize,
   setTextColor,
@@ -12,18 +15,28 @@ import {
 } from "./rich-formatting";
 
 /**
- * Runs a Format menu action on `editor` (DESIGN_SPEC §7.11). The ids match
- * src-tauri/src/menu.rs, without their `format-` prefix. Actions apply only
- * while the document body has focus, so a shortcut typed in the title or a
- * dialog does nothing.
+ * Runs a native Format menu action on `editor` (DESIGN_SPEC §7.11). The ids
+ * match src-tauri/src/menu.rs, without their `format-` prefix. Actions apply
+ * only while the document body has focus, so a shortcut typed in the title or
+ * a dialog does nothing.
  */
 export function runFormatAction(editor: Editor, action: string) {
-  if (!editor.isFocused) {
-    return;
+  if (editor.isFocused) {
+    applyFormatAction(editor, action);
   }
+}
+
+/** Applies a formatting action whatever has focus; the toolbar's menus use this. */
+export function applyFormatAction(editor: Editor, action: string) {
   const chain = () => editor.chain().focus();
 
   switch (action) {
+    case "undo":
+      chain().undo().run();
+      return;
+    case "redo":
+      chain().redo().run();
+      return;
     case "bold":
       chain().toggleBold().run();
       return;
@@ -38,6 +51,26 @@ export function runFormatAction(editor: Editor, action: string) {
       return;
     case "highlight":
       toggleHighlight(editor);
+      return;
+    case "style-body":
+    case "style-h1":
+    case "style-h2":
+    case "style-h3":
+    case "style-quote":
+    case "style-code":
+      setParagraphStyle(editor, action.slice("style-".length) as ParagraphStyle);
+      return;
+    case "list-bullet":
+      chain().toggleBulletList().run();
+      return;
+    case "list-numbered":
+      chain().toggleOrderedList().run();
+      return;
+    case "list-task":
+      chain().toggleTaskList().run();
+      return;
+    case "link":
+      useLinkDialogStore.getState().open();
       return;
     case "align-left":
       // Left is the default, so it is stored as no alignment.

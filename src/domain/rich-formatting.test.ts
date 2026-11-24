@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  commonValue,
   isHighlight,
   isTextColor,
   markValue,
@@ -69,5 +70,17 @@ describe("markValue", () => {
   it("keeps a value that differs from the document's", () => {
     expect(markValue("inter", "lora")).toBe("inter");
     expect(markValue(18, 13)).toBe(18);
+  });
+});
+
+describe("commonValue", () => {
+  it("gives the value every item shares", () => {
+    expect(commonValue(["lora", "lora"])).toBe("lora");
+    expect(commonValue([13])).toBe(13);
+  });
+
+  it("gives null for mixed values or none", () => {
+    expect(commonValue(["lora", "inter"])).toBeNull();
+    expect(commonValue([])).toBeNull();
   });
 });

@@ -14,7 +14,7 @@ import {
   type TextColor,
 } from "@/domain/rich-formatting";
 import { useSettingsStore } from "@/stores/settings-store";
-import { getDocumentStyle } from "./document-style";
+import { getDocumentStyle, setDocumentStyle } from "./document-style";
 
 /**
  * Rich formatting (DESIGN_SPEC §7.11). Colour, highlight, font, and size are
@@ -161,4 +161,81 @@ export function indent(editor: Editor, direction: 1 | -1) {
       return true;
     })
     .run();
+}
+
+/** The paragraph styles of the toolbar and Format ▸ Paragraph Style. */
+export const PARAGRAPH_STYLES = ["body", "h1", "h2", "h3", "quote", "code"] as const;
+
+export type ParagraphStyle = (typeof PARAGRAPH_STYLES)[number];
+
+export const PARAGRAPH_STYLE_LABELS: Record<ParagraphStyle, string> = {
+  body: "Body",
+  h1: "Heading 1",
+  h2: "Heading 2",
+  h3: "Heading 3",
+  quote: "Quote",
+  code: "Code",
+};
+
+/** The paragraph style where the selection is. */
+export function getParagraphStyle(editor: Editor): ParagraphStyle {
+  if (editor.isActive("codeBlock")) {
+    return "code";
+  }
+  for (const level of [1, 2, 3] as const) {
+    if (editor.isActive("heading", { level })) {
+      return `h${level}`;
+    }
+  }
+  return editor.isActive("blockquote") ? "quote" : "body";
+}
+
+/**
+ * Gives the selected blocks a paragraph style. Quote wraps them, or unwraps
+ * them if they are already quoted; the other styles also take them out of a quote.
+ */
+export function setParagraphStyle(editor: Editor, style: ParagraphStyle) {
+  const chain = editor.chain().focus();
+  if (style === "quote") {
+    // Like ⌘⇧B in Tiptap, choosing Quote again takes the text out of it.
+    if (editor.isActive("blockquote")) {
+      chain.unsetBlockquote().run();
+    } else {
+      chain.setParagraph().setBlockquote().run();
+    }
+    return;
+  }
+  if (editor.isActive("blockquote")) {
+    chain.unsetBlockquote();
+  }
+  if (style === "body") {
+    chain.setParagraph().run();
+  } else if (style === "code") {
+    chain.setCodeBlock().run();
+  } else {
+    chain.setHeading({ level: Number(style.slice(1)) as 1 | 2 | 3 }).run();
+  }
+}
+
+/**
+ * The toolbar's font picker: with text selected it marks the selection;
+ * with nothing selected it sets the document's own font (DESIGN_SPEC §7.11).
+ */
+export function chooseFont(editor: Editor, fontId: FontId) {
+  if (editor.state.selection.empty) {
+    setDocumentStyle(editor, { fontId });
+    editor.commands.focus();
+  } else {
+    setSelectionFont(editor, fontId);
+  }
+}
+
+/** The toolbar's size picker, which works as `chooseFont` does. */
+export function chooseFontSize(editor: Editor, fontSize: number) {
+  if (editor.state.selection.empty) {
+    setDocumentStyle(editor, { fontSize });
+    editor.commands.focus();
+  } else {
+    setSelectionSize(editor, fontSize);
+  }
 }
