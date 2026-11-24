@@ -7,6 +7,7 @@ import {
   Monitor,
   Moon,
   MoveVertical,
+  PanelTop,
   Settings,
   Sun,
   TextSelect,
@@ -83,6 +84,13 @@ export const COMMANDS: Command[] = [
     keywords: "focus distraction free fullscreen",
     Icon: Focus,
     run: () => view().setZen(!view().isZen),
+  },
+  {
+    id: "toggle-toolbar",
+    title: "Toggle Toolbar",
+    keywords: "formatting format bar show hide",
+    Icon: PanelTop,
+    run: () => settings().update({ showToolbar: !settings().showToolbar }),
   },
   {
     id: "toggle-typewriter",

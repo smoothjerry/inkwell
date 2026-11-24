@@ -1,9 +1,11 @@
 import { EditorContent, type JSONContent, useEditor, useEditorState } from "@tiptap/react";
 import { type CSSProperties, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { resolveDocumentStyle } from "@/domain/document-style";
 import { fontFamilyCss } from "@/domain/fonts";
 import { countWords } from "@/domain/word-count";
 import { useSettingsStore } from "@/stores/settings-store";
+import { useViewStore } from "@/stores/view-store";
 import { createAutosaver } from "./autosaver";
 import { BubbleToolbar } from "./bubble-toolbar";
 import { getDocumentStyle } from "./document-style";
@@ -14,6 +16,8 @@ import { FindBar } from "./find-bar";
 import { useFindStore } from "./find-store";
 import { runFormatAction } from "./format-actions";
 import { setFormatMenuHandler } from "./format-menu";
+import { FormattingToolbar } from "./formatting-toolbar";
+import { LinkDialog } from "./link-dialog";
 import { flushWordCount, trackDocumentOpened, trackEdit } from "./session-tracker";
 import { SlashMenu } from "./slash-menu";
 import { useWordCountStore } from "./word-count-store";
@@ -23,10 +27,12 @@ const SELECTION_COUNT_DELAY_MS = 100;
 type DocumentEditorProps = {
   documentId: string;
   initialContent: JSONContent;
+  /** Where the formatting toolbar goes: above the scrolling document. */
+  toolbarSlot: HTMLElement | null;
 };
 
 /** The Tiptap editor for one document. Mount it with `key={documentId}`. */
-export function DocumentEditor({ documentId, initialContent }: DocumentEditorProps) {
+export function DocumentEditor({ documentId, initialContent, toolbarSlot }: DocumentEditorProps) {
   const [autosaver] = useState(() => createAutosaver(documentId));
   const selectionTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -87,6 +93,9 @@ export function DocumentEditor({ documentId, initialContent }: DocumentEditorPro
   useEffect(() => setFormatMenuHandler((action) => runFormatAction(editor, action)), [editor]);
 
   const isFindOpen = useFindStore((state) => state.isOpen);
+  // The toolbar is hidden in zen mode (DESIGN_SPEC §7.11).
+  const showToolbar = useSettingsStore((state) => state.showToolbar);
+  const isZen = useViewStore((state) => state.isZen);
 
   // The document's own style, else the editorFont setting and the defaults.
   // The selector's result is compared by value, so typing does not re-render.
@@ -101,6 +110,10 @@ export function DocumentEditor({ documentId, initialContent }: DocumentEditorPro
 
   return (
     <>
+      {toolbarSlot &&
+        showToolbar &&
+        !isZen &&
+        createPortal(<FormattingToolbar editor={editor} />, toolbarSlot)}
       {isFindOpen && <FindBar editor={editor} />}
       <div style={styleCss}>
         <DocumentTitle documentId={documentId} onEnter={() => editor.commands.focus("start")} />
@@ -109,6 +122,7 @@ export function DocumentEditor({ documentId, initialContent }: DocumentEditorPro
       <BubbleToolbar editor={editor} />
       <SlashMenu />
       <DocumentStyleDialog editor={editor} />
+      <LinkDialog editor={editor} />
     </>
   );
 }

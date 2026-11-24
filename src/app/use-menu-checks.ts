@@ -19,6 +19,7 @@ export function syncMenuChecks(force = false) {
   const state = {
     sidebar: !settings.sidebarCollapsed,
     zen: useViewStore.getState().isZen,
+    toolbar: settings.showToolbar,
     typewriter: settings.typewriterMode,
     dimMode: settings.dimMode,
   };

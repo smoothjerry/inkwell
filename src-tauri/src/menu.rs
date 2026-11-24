@@ -95,6 +95,7 @@ const LOG_FILE_NAME: &str = "Inkwell.log";
 pub struct MenuChecks {
     sidebar: CheckMenuItem<Wry>,
     zen: CheckMenuItem<Wry>,
+    toolbar: CheckMenuItem<Wry>,
     typewriter: CheckMenuItem<Wry>,
     dim_off: CheckMenuItem<Wry>,
     dim_sentence: CheckMenuItem<Wry>,
@@ -107,6 +108,7 @@ pub struct MenuChecks {
 pub struct MenuCheckState {
     sidebar: bool,
     zen: bool,
+    toolbar: bool,
     typewriter: bool,
     /// "off", "sentence" or "paragraph".
     dim_mode: String,
@@ -118,6 +120,7 @@ pub fn set_menu_checks(checks: State<'_, MenuChecks>, state: MenuCheckState) -> 
     let pairs = [
         (&checks.sidebar, state.sidebar),
         (&checks.zen, state.zen),
+        (&checks.toolbar, state.toolbar),
         (&checks.typewriter, state.typewriter),
         (&checks.dim_off, state.dim_mode == "off"),
         (&checks.dim_sentence, state.dim_mode == "sentence"),
@@ -184,6 +187,7 @@ pub fn build(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
     let stats = item("stats", "Stats", Some("CmdOrCtrl+Shift+S"))?;
     let sidebar = check("sidebar", "Show Sidebar", Some("CmdOrCtrl+Backslash"))?;
     let zen = check("zen", "Zen Mode", Some("CmdOrCtrl+Shift+F"))?;
+    let toolbar = check("toolbar", "Show Toolbar", Some("CmdOrCtrl+Alt+T"))?;
     let typewriter = check(
         "typewriter",
         "Typewriter Scrolling",
@@ -215,12 +219,21 @@ pub fn build(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
             &stats,
             &palette_separator,
             &sidebar,
+            &toolbar,
             &zen,
             &typewriter,
             &dimming,
             &view_separator,
         ],
-        &[&palette, &stats, &sidebar, &zen, &typewriter, &dimming],
+        &[
+            &palette,
+            &stats,
+            &sidebar,
+            &toolbar,
+            &zen,
+            &typewriter,
+            &dimming,
+        ],
     )?;
 
     // Find goes at the bottom of Edit, after the clipboard items.
@@ -265,6 +278,7 @@ pub fn build(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
     app.manage(MenuChecks {
         sidebar,
         zen,
+        toolbar,
         typewriter,
         dim_off,
         dim_sentence,
@@ -341,6 +355,21 @@ fn format_menu(app: &AppHandle) -> tauri::Result<Submenu<Wry>> {
         ],
     )?;
 
+    // Tiptap's own shortcuts for these, shown here so they can be found.
+    let paragraph_style = Submenu::with_items(
+        app,
+        "Paragraph Style",
+        true,
+        &[
+            &item("style-body", "Body", Some("CmdOrCtrl+Alt+0"))?,
+            &item("style-h1", "Heading 1", Some("CmdOrCtrl+Alt+1"))?,
+            &item("style-h2", "Heading 2", Some("CmdOrCtrl+Alt+2"))?,
+            &item("style-h3", "Heading 3", Some("CmdOrCtrl+Alt+3"))?,
+            &item("style-quote", "Quote", Some("CmdOrCtrl+Shift+B"))?,
+            &item("style-code", "Code", Some("CmdOrCtrl+Alt+C"))?,
+        ],
+    )?;
+
     Submenu::with_items(
         app,
         "Format",
@@ -354,11 +383,14 @@ fn format_menu(app: &AppHandle) -> tauri::Result<Submenu<Wry>> {
                 None::<&str>,
             )?,
             &separator()?,
+            &paragraph_style,
+            &separator()?,
             &item("bold", "Bold", Some("CmdOrCtrl+B"))?,
             &item("italic", "Italic", Some("CmdOrCtrl+I"))?,
             &item("underline", "Underline", Some("CmdOrCtrl+U"))?,
             &item("strike", "Strikethrough", None)?,
             &item("highlight", "Highlight", Some("CmdOrCtrl+Shift+H"))?,
+            &item("link", "Link…", None)?,
             &separator()?,
             &text_color,
             &highlight_color,
@@ -367,6 +399,10 @@ fn format_menu(app: &AppHandle) -> tauri::Result<Submenu<Wry>> {
             &size,
             &separator()?,
             &align,
+            &separator()?,
+            &item("list-bullet", "Bulleted List", Some("CmdOrCtrl+Shift+8"))?,
+            &item("list-numbered", "Numbered List", Some("CmdOrCtrl+Shift+7"))?,
+            &item("list-task", "Task List", Some("CmdOrCtrl+Shift+9"))?,
             &item("indent", "Indent", Some("CmdOrCtrl+BracketRight"))?,
             &item("outdent", "Outdent", Some("CmdOrCtrl+BracketLeft"))?,
         ],

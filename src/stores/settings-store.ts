@@ -28,6 +28,8 @@ export type Settings = {
   /** The font of documents that have not chosen one (DESIGN_SPEC §7.11). */
   editorFont: FontId;
   editorWidth: EditorWidth;
+  /** Whether the formatting toolbar is shown above the document (⌘⌥T). */
+  showToolbar: boolean;
   /** Keep the caret line near the middle of the window while writing. */
   typewriterMode: boolean;
   /** Fade everything except the current sentence or paragraph. */
@@ -53,6 +55,7 @@ const DEFAULTS: Settings = {
   weekStartsOn: 1,
   editorFont: DEFAULT_FONT_ID,
   editorWidth: "medium",
+  showToolbar: true,
   typewriterMode: false,
   dimMode: "off",
   celebrations: true,
@@ -75,6 +78,7 @@ const VALIDATORS: { [Key in keyof Settings]: (value: unknown) => boolean } = {
     Number.isInteger(value) && (value as number) >= 0 && (value as number) <= 6,
   editorFont: (value) => toFontId(value) !== null,
   editorWidth: (value) => EDITOR_WIDTHS.includes(value as EditorWidth),
+  showToolbar: (value) => typeof value === "boolean",
   typewriterMode: (value) => typeof value === "boolean",
   dimMode: (value) => DIM_MODES.includes(value as DimMode),
   celebrations: (value) => typeof value === "boolean",
