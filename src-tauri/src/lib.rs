@@ -2,6 +2,7 @@
 
 mod menu;
 mod migrations;
+mod update_check;
 
 use tauri_plugin_log::{log::LevelFilter, RotationStrategy, Target, TargetKind};
 use tauri_plugin_window_state::StateFlags;
@@ -47,7 +48,13 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         // Used from Rust only (Help menu), so the webview gets no opener permission.
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![menu::set_menu_checks])
+        // Records the executable now, so a later rebuild can be noticed (DESIGN_SPEC §7.12).
+        .manage(update_check::LaunchedExe::record())
+        .invoke_handler(tauri::generate_handler![
+            menu::set_menu_checks,
+            update_check::installed_update,
+            update_check::relaunch
+        ])
         .menu(menu::build)
         .on_menu_event(menu::handle_event)
         .run(tauri::generate_context!())

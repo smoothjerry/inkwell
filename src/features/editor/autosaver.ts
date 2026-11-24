@@ -12,9 +12,17 @@ let queue: Promise<void> = Promise.resolve();
 // Flush functions of the autosavers that are currently in use.
 const live = new Set<() => Promise<void>>();
 
-/** Saves every pending edit now. Resolves when all of them are written. */
-export async function flushAutosaves(): Promise<void> {
+// How many saves have failed since launch, so a flush can tell whether its saves did.
+let failedSaves = 0;
+
+/**
+ * Saves every pending edit now. Resolves when all of them are written, with
+ * false if any save failed (it has already shown the save-error toast).
+ */
+export async function flushAutosaves(): Promise<boolean> {
+  const failedBefore = failedSaves;
   await Promise.all([...live].map((flush) => flush()));
+  return failedSaves === failedBefore;
 }
 
 /** Resolves when every save requested so far has finished. */
@@ -57,6 +65,7 @@ export function createAutosaver(documentId: string) {
       queue = queue
         .then(() => save(documentId, doc))
         .catch((error: unknown) => {
+          failedSaves += 1;
           console.error(error);
           toast.error("Could not save the document.");
         });

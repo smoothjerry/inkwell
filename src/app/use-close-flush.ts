@@ -20,7 +20,9 @@ export function useCloseFlush() {
     if (isTauri()) {
       // The window closes only after this handler's promise resolves.
       void getCurrentWindow()
-        .onCloseRequested(() => flushPendingWork())
+        .onCloseRequested(async () => {
+          await flushPendingWork();
+        })
         .then((unlisten) => {
           if (unmounted) {
             unlisten();
