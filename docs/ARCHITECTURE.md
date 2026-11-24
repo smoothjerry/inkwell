@@ -176,6 +176,12 @@ Geist Sans and Geist Mono are loaded with `@font-face` from the `geist` npm pack
 
 The editor's font library (DESIGN_SPEC §7.11) is defined as data in `src/domain/fonts.ts`; its licences are in `docs/FONTS.md`. The other 18 fonts come from `@fontsource` packages. `src/styles/fonts.css` holds their `@font-face` rules, copied from each package's CSS but keeping only the Latin and Latin Extended subsets: 80 files, 2.9 MB. A font file is downloaded only when text first uses it, so cold start does not load the library. The editor column sets `--editor-font` from the `editorFont` setting, and older `sans`, `serif`, and `mono` values are mapped to Geist, Newsreader, and Geist Mono when settings load.
 
+## Books and pages
+
+M10 (DESIGN_SPEC §7.9, §7.10) is being built.
+
+- The print formats are data in `src/domain/book-formats.ts`: trim, margins, type size, and line height for each preset. Sizes are written in inches or mm, as the spec gives them, and stored in points, the unit the pagination engine will lay pages out in. `textBlockSize` gives the area inside the margins.
+
 ## Performance budgets
 
 Measured on 2026-11-19 on an Apple Silicon Mac (macOS 26.6), release build unless noted. Test documents are plain paragraphs of 100 words each.
