@@ -276,3 +276,84 @@
   background: color-mix(in srgb, var(--fg) 32%, transparent);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--fg) 50%, transparent);
 }
+
+/* Rich formatting (DESIGN_SPEC §7.11). Colours are stored by name; the tokens
+   in tokens.css give each name a light and a dark value. */
+.editor-prose [data-color="red"] {
+  color: var(--text-red);
+}
+
+.editor-prose [data-color="orange"] {
+  color: var(--text-orange);
+}
+
+.editor-prose [data-color="yellow"] {
+  color: var(--text-yellow);
+}
+
+.editor-prose [data-color="green"] {
+  color: var(--text-green);
+}
+
+.editor-prose [data-color="blue"] {
+  color: var(--text-blue);
+}
+
+.editor-prose [data-color="purple"] {
+  color: var(--text-purple);
+}
+
+.editor-prose [data-color="pink"] {
+  color: var(--text-pink);
+}
+
+.editor-prose [data-color="gray"] {
+  color: var(--text-gray);
+}
+
+.editor-prose [data-highlight="yellow"] {
+  background-color: var(--highlight-yellow);
+}
+
+.editor-prose [data-highlight="green"] {
+  background-color: var(--highlight-green);
+}
+
+.editor-prose [data-highlight="blue"] {
+  background-color: var(--highlight-blue);
+}
+
+.editor-prose [data-highlight="pink"] {
+  background-color: var(--highlight-pink);
+}
+
+.editor-prose [data-highlight="purple"] {
+  background-color: var(--highlight-purple);
+}
+
+.editor-prose [data-highlight] {
+  border-radius: 2px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* Block indent: steps of 0.5 in. */
+.editor-prose [data-indent="1"] {
+  margin-left: 0.5in;
+}
+
+.editor-prose [data-indent="2"] {
+  margin-left: 1in;
+}
+
+.editor-prose [data-indent="3"] {
+  margin-left: 1.5in;
+}
+
+.editor-prose [data-indent="4"] {
+  margin-left: 2in;
+}
+
+.editor-prose [data-indent="5"] {
+  margin-left: 2.5in;
+}

@@ -17,6 +17,73 @@ use tauri_plugin_opener::OpenerExt;
 /// the frontend.
 const ACTION_PREFIX: &str = "action:";
 
+/// Text colours and highlights by stored name, as in
+/// `src/domain/rich-formatting.ts`. `src/app/format-menu.test.ts` checks
+/// that these lists match it.
+const TEXT_COLORS: [(&str, &str); 8] = [
+    ("red", "Red"),
+    ("orange", "Orange"),
+    ("yellow", "Yellow"),
+    ("green", "Green"),
+    ("blue", "Blue"),
+    ("purple", "Purple"),
+    ("pink", "Pink"),
+    ("gray", "Gray"),
+];
+const HIGHLIGHTS: [(&str, &str); 5] = [
+    ("yellow", "Yellow"),
+    ("green", "Green"),
+    ("blue", "Blue"),
+    ("pink", "Pink"),
+    ("purple", "Purple"),
+];
+
+/// The font library by group, as in `src/domain/fonts.ts` (checked by the same test).
+const FONT_GROUPS: [(&str, &[(&str, &str)]); 5] = [
+    (
+        "Serif",
+        &[
+            ("newsreader", "Newsreader"),
+            ("eb-garamond", "EB Garamond"),
+            ("libre-baskerville", "Libre Baskerville"),
+            ("crimson-pro", "Crimson Pro"),
+            ("literata", "Literata"),
+            ("lora", "Lora"),
+            ("source-serif-4", "Source Serif 4"),
+            ("cormorant-garamond", "Cormorant Garamond"),
+        ],
+    ),
+    (
+        "Sans",
+        &[
+            ("geist", "Geist"),
+            ("inter", "Inter"),
+            ("ibm-plex-sans", "IBM Plex Sans"),
+            ("work-sans", "Work Sans"),
+            ("atkinson-hyperlegible", "Atkinson Hyperlegible"),
+        ],
+    ),
+    (
+        "Mono",
+        &[
+            ("geist-mono", "Geist Mono"),
+            ("jetbrains-mono", "JetBrains Mono"),
+            ("ibm-plex-mono", "IBM Plex Mono"),
+        ],
+    ),
+    (
+        "Typewriter",
+        &[
+            ("courier-prime", "Courier Prime"),
+            ("cutive-mono", "Cutive Mono"),
+        ],
+    ),
+    (
+        "Handwriting",
+        &[("caveat", "Caveat"), ("patrick-hand", "Patrick Hand")],
+    ),
+];
+
 const REPORT_ISSUE_ID: &str = "help:report-issue";
 const SHOW_LOG_ID: &str = "help:show-log";
 const REPORT_ISSUE_URL: &str = "https://github.com/smoothjerry/inkwell/issues/new/choose";
@@ -167,8 +234,7 @@ pub fn build(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
     }
 
     // Format follows Edit, as in other word processors (DESIGN_SPEC §7.11).
-    let document_style = item("document-style", "Document Style…", None)?;
-    let format = Submenu::with_items(app, "Format", true, &[&document_style])?;
+    let format = format_menu(app)?;
     let edit_index = menu.items()?.iter().position(|kind| {
         matches!(kind, MenuItemKind::Submenu(submenu) if submenu.text().is_ok_and(|text| text == "Edit"))
     });
@@ -206,6 +272,105 @@ pub fn build(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
     });
 
     Ok(menu)
+}
+
+/// The Format menu (DESIGN_SPEC §7.11, shortcuts in §7.7). Its items are sent
+/// as `format-…` actions, which the frontend runs on the open document.
+fn format_menu(app: &AppHandle) -> tauri::Result<Submenu<Wry>> {
+    let item = |action: &str, label: &str, accelerator: Option<&str>| {
+        MenuItem::with_id(
+            app,
+            format!("{ACTION_PREFIX}format-{action}"),
+            label,
+            true,
+            accelerator,
+        )
+    };
+    let separator = || PredefinedMenuItem::separator(app);
+
+    let text_color = Submenu::new(app, "Text Colour", true)?;
+    text_color.append(&item("color-default", "Default", None)?)?;
+    text_color.append(&separator()?)?;
+    for (name, label) in TEXT_COLORS {
+        text_color.append(&item(&format!("color-{name}"), label, None)?)?;
+    }
+
+    let highlight_color = Submenu::new(app, "Highlight Colour", true)?;
+    highlight_color.append(&item("highlight-none", "None", None)?)?;
+    highlight_color.append(&separator()?)?;
+    for (name, label) in HIGHLIGHTS {
+        highlight_color.append(&item(&format!("highlight-{name}"), label, None)?)?;
+    }
+
+    // Each group is headed by its name, disabled, as in the font picker.
+    let font = Submenu::new(app, "Font", true)?;
+    font.append(&item("font-document", "Document Font", None)?)?;
+    for (group, fonts) in FONT_GROUPS {
+        font.append(&separator()?)?;
+        font.append(&MenuItem::new(app, group, false, None::<&str>)?)?;
+        for (id, name) in fonts {
+            font.append(&item(&format!("font-{id}"), name, None)?)?;
+        }
+    }
+
+    let size = Submenu::with_items(
+        app,
+        "Size",
+        true,
+        &[
+            &item("size-bigger", "Bigger", Some("CmdOrCtrl+Shift+Period"))?,
+            &item("size-smaller", "Smaller", Some("CmdOrCtrl+Shift+Comma"))?,
+            &separator()?,
+            &item("size-document", "Document Size", None)?,
+        ],
+    )?;
+
+    let align = Submenu::with_items(
+        app,
+        "Align",
+        true,
+        &[
+            &item("align-left", "Left", Some("CmdOrCtrl+Shift+BracketLeft"))?,
+            &item("align-center", "Centre", Some("CmdOrCtrl+Shift+Backslash"))?,
+            &item("align-right", "Right", Some("CmdOrCtrl+Shift+BracketRight"))?,
+            &item(
+                "align-justify",
+                "Justify",
+                Some("CmdOrCtrl+Alt+Shift+Backslash"),
+            )?,
+        ],
+    )?;
+
+    Submenu::with_items(
+        app,
+        "Format",
+        true,
+        &[
+            &MenuItem::with_id(
+                app,
+                format!("{ACTION_PREFIX}document-style"),
+                "Document Style…",
+                true,
+                None::<&str>,
+            )?,
+            &separator()?,
+            &item("bold", "Bold", Some("CmdOrCtrl+B"))?,
+            &item("italic", "Italic", Some("CmdOrCtrl+I"))?,
+            &item("underline", "Underline", Some("CmdOrCtrl+U"))?,
+            &item("strike", "Strikethrough", None)?,
+            &item("highlight", "Highlight", Some("CmdOrCtrl+Shift+H"))?,
+            &separator()?,
+            &text_color,
+            &highlight_color,
+            &separator()?,
+            &font,
+            &size,
+            &separator()?,
+            &align,
+            &item("indent", "Indent", Some("CmdOrCtrl+BracketRight"))?,
+            &item("outdent", "Outdent", Some("CmdOrCtrl+BracketLeft"))?,
+        ],
+    )
 }
 
 /// Puts `items` at the top of the default menu's submenu called `title`.

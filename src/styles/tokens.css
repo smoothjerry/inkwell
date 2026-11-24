@@ -23,6 +23,21 @@
   --focus-ring: rgb(0 112 243 / 0.4);
   --shadow-overlay: 0 8px 30px rgb(0 0 0 / 0.12);
 
+  /* Text colours and highlights (DESIGN_SPEC §7.11), named as stored in documents. */
+  --text-red: #dc2626;
+  --text-orange: #ea580c;
+  --text-yellow: #ca8a04;
+  --text-green: #16a34a;
+  --text-blue: #2563eb;
+  --text-purple: #9333ea;
+  --text-pink: #db2777;
+  --text-gray: #6b7280;
+  --highlight-yellow: #fef08a;
+  --highlight-green: #bbf7d0;
+  --highlight-blue: #bfdbfe;
+  --highlight-pink: #fbcfe8;
+  --highlight-purple: #e9d5ff;
+
   --radius-control: 6px;
   --radius-card: 8px;
   --radius-dialog: 12px;
@@ -46,6 +61,20 @@
     --streak: #fb923c;
     --danger: #ef4444;
     --shadow-overlay: 0 8px 30px rgb(0 0 0 / 0.6);
+
+    --text-red: #f87171;
+    --text-orange: #fb923c;
+    --text-yellow: #facc15;
+    --text-green: #4ade80;
+    --text-blue: #60a5fa;
+    --text-purple: #c084fc;
+    --text-pink: #f472b6;
+    --text-gray: #9ca3af;
+    --highlight-yellow: rgb(250 204 21 / 0.3);
+    --highlight-green: rgb(74 222 128 / 0.25);
+    --highlight-blue: rgb(96 165 250 / 0.3);
+    --highlight-pink: rgb(244 114 182 / 0.3);
+    --highlight-purple: rgb(192 132 252 / 0.3);
   }
 }
 
@@ -63,4 +92,18 @@
   --streak: #fb923c;
   --danger: #ef4444;
   --shadow-overlay: 0 8px 30px rgb(0 0 0 / 0.6);
+
+  --text-red: #f87171;
+  --text-orange: #fb923c;
+  --text-yellow: #facc15;
+  --text-green: #4ade80;
+  --text-blue: #60a5fa;
+  --text-purple: #c084fc;
+  --text-pink: #f472b6;
+  --text-gray: #9ca3af;
+  --highlight-yellow: rgb(250 204 21 / 0.3);
+  --highlight-green: rgb(74 222 128 / 0.25);
+  --highlight-blue: rgb(96 165 250 / 0.3);
+  --highlight-pink: rgb(244 114 182 / 0.3);
+  --highlight-purple: rgb(192 132 252 / 0.3);
 }

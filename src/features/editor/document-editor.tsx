@@ -12,6 +12,8 @@ import { DocumentTitle } from "./document-title";
 import { createEditorExtensions } from "./editor-extensions";
 import { FindBar } from "./find-bar";
 import { useFindStore } from "./find-store";
+import { runFormatAction } from "./format-actions";
+import { setFormatMenuHandler } from "./format-menu";
 import { flushWordCount, trackDocumentOpened, trackEdit } from "./session-tracker";
 import { SlashMenu } from "./slash-menu";
 import { useWordCountStore } from "./word-count-store";
@@ -80,6 +82,9 @@ export function DocumentEditor({ documentId, initialContent }: DocumentEditorPro
   useEffect(() => {
     editor.view.dispatch(editor.state.tr);
   }, [editor, dimMode]);
+
+  // The native Format menu acts on this editor while it is open.
+  useEffect(() => setFormatMenuHandler((action) => runFormatAction(editor, action)), [editor]);
 
   const isFindOpen = useFindStore((state) => state.isOpen);
 

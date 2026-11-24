@@ -1,7 +1,7 @@
 import { isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useEffect } from "react";
-import { useDocumentStyleStore, useFindStore } from "@/features/editor";
+import { runFormatMenuAction, useDocumentStyleStore, useFindStore } from "@/features/editor";
 import { importMarkdownFiles, requestExport } from "@/features/export";
 import { useLibraryStore, usePaletteStore } from "@/features/library";
 import { DIM_MODES, useSettingsStore } from "@/stores/settings-store";
@@ -72,6 +72,10 @@ function runMenuAction(action: string) {
       settings.update({ dimMode: next });
       break;
     }
+    default:
+      if (action.startsWith("format-")) {
+        runFormatMenuAction(action.slice("format-".length));
+      }
   }
 }
 
