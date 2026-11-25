@@ -31,71 +31,72 @@
   white-space: pre-wrap;
 }
 
-.editor-prose > * + * {
+/* Layout rules below are for the pageless view; the paged view uses book-typography.css. */
+.editor-prose:not(.book-text) > * + * {
   margin-top: 0.75em;
 }
 
-.editor-prose h1,
-.editor-prose h2,
-.editor-prose h3 {
+.editor-prose:not(.book-text) h1,
+.editor-prose:not(.book-text) h2,
+.editor-prose:not(.book-text) h3 {
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.25;
 }
 
-.editor-prose h1 {
+.editor-prose:not(.book-text) h1 {
   margin-top: 1.6em;
   font-size: 1.75em;
 }
 
-.editor-prose h2 {
+.editor-prose:not(.book-text) h2 {
   margin-top: 1.5em;
   font-size: 1.375em;
 }
 
-.editor-prose h3 {
+.editor-prose:not(.book-text) h3 {
   margin-top: 1.4em;
   font-size: 1.125em;
 }
 
-.editor-prose > :first-child {
+.editor-prose:not(.book-text) > :first-child {
   margin-top: 0;
 }
 
-.editor-prose ul,
-.editor-prose ol {
+.editor-prose:not(.book-text) ul,
+.editor-prose:not(.book-text) ol {
   padding-left: 1.5em;
 }
 
-.editor-prose ul {
+.editor-prose:not(.book-text) ul {
   list-style: disc;
 }
 
-.editor-prose ol {
+.editor-prose:not(.book-text) ol {
   list-style: decimal;
 }
 
-.editor-prose li > * + * {
+.editor-prose:not(.book-text) li > * + * {
   margin-top: 0.25em;
 }
 
-.editor-prose ul[data-type="taskList"] {
+.editor-prose:not(.book-text) ul[data-type="taskList"] {
   padding-left: 0;
   list-style: none;
 }
 
-.editor-prose ul[data-type="taskList"] > li {
+.editor-prose:not(.book-text) ul[data-type="taskList"] > li {
   display: flex;
   gap: 0.6em;
 }
 
-.editor-prose ul[data-type="taskList"] > li > label {
+.editor-prose:not(.book-text) ul[data-type="taskList"] > li > label {
   flex: none;
   margin-top: 0.3em;
   user-select: none;
 }
 
-.editor-prose ul[data-type="taskList"] > li > div {
+.editor-prose:not(.book-text) ul[data-type="taskList"] > li > div {
   flex: 1;
   min-width: 0;
 }
@@ -105,19 +106,19 @@
   text-decoration: line-through;
 }
 
-.editor-prose ul[data-type="taskList"] input[type="checkbox"] {
+.editor-prose:not(.book-text) ul[data-type="taskList"] input[type="checkbox"] {
   width: 1em;
   height: 1em;
   accent-color: var(--fg);
 }
 
-.editor-prose blockquote {
+.editor-prose:not(.book-text) blockquote {
   padding-left: 1em;
   border-left: 2px solid var(--border-strong);
   color: var(--fg-muted);
 }
 
-.editor-prose code {
+.editor-prose:not(.book-text) code {
   padding: 0.15em 0.35em;
   border: 1px solid var(--border);
   border-radius: 4px;
@@ -126,7 +127,7 @@
   font-size: 0.875em;
 }
 
-.editor-prose pre {
+.editor-prose:not(.book-text) pre {
   padding: 0.9em 1em;
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
@@ -138,14 +139,14 @@
   white-space: pre;
 }
 
-.editor-prose pre code {
+.editor-prose:not(.book-text) pre code {
   padding: 0;
   border: 0;
   background: none;
   font-size: inherit;
 }
 
-.editor-prose hr {
+.editor-prose:not(.book-text) hr {
   margin-block: 2em;
   border: 0;
   border-top: 1px solid var(--border-strong);

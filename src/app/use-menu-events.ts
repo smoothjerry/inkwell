@@ -58,6 +58,9 @@ function runMenuAction(action: string) {
     case "toolbar":
       settings.update({ showToolbar: !settings.showToolbar });
       break;
+    case "paged":
+      settings.update({ pagedView: !settings.pagedView });
+      break;
     case "typewriter":
       settings.update({ typewriterMode: !settings.typewriterMode });
       break;

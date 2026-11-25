@@ -15,6 +15,9 @@
   font-size: var(--book-font-size);
   line-height: var(--book-line-height);
   font-kerning: normal;
+  /* As the editor has them (ProseMirror turns ligatures off), so lines wrap the same. */
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0;
   overflow-wrap: break-word;
   white-space: pre-wrap;
 }
@@ -44,11 +47,17 @@
 
 /*
  * No indent on the first paragraph or one after a heading. The engine marks
- * those with a class, since a block measured on its own has no siblings.
+ * those with a class, since a block measured on its own has no siblings; the
+ * paged view's editor has the siblings, so it uses them. Both must agree.
  */
-.book-text > p.book-no-indent,
 .book-text li p,
 .book-text blockquote p:first-child {
+  text-indent: 0;
+}
+
+.book-text > p.book-no-indent,
+.book-text.tiptap > p:first-child,
+.book-text.tiptap > :is(h1, h2, h3) + p {
   text-indent: 0;
 }
 
@@ -111,6 +120,12 @@
 
 .book-text blockquote {
   padding-left: 1em;
+  border-left: 2px solid var(--border-strong);
+}
+
+.book-text code {
+  font-family: "Geist Mono", Menlo, monospace;
+  font-size: 0.86em;
 }
 
 .book-text pre {
@@ -143,4 +158,128 @@
 
 .book-text [data-indent="5"] {
   margin-left: 2.5in;
+}
+
+/*
+ * Paged view (DESIGN_SPEC §7.10). The editor column is drawn as sheets of
+ * the format's trim size: the column has the sheet's background and side
+ * edges, and each page gap (paged-view-plugin.ts) draws the rest of its
+ * page, the bottom margin with the page number, the space between sheets,
+ * and the next sheet's top margin. Sheets use the theme's colours, so the
+ * dark theme stays dark. paged-view.tsx sets the variables.
+ */
+.editor-scroll:has(> .editor-column[data-paged]) {
+  overflow-x: hidden;
+  background: var(--bg-subtle);
+}
+
+/*
+ * A window narrower than a sheet scales the sheets down with a transform, so
+ * the text wraps exactly as the engine measured it. paged-view.tsx sets
+ * --page-scale, and --page-shrink to take back the space the transform frees.
+ */
+.editor-column[data-paged][data-scaled] {
+  margin-right: 0;
+  margin-bottom: calc(40vh - var(--page-shrink, 0px));
+  margin-left: calc((100% - var(--page-width) - 2px) / 2);
+  transform: scale(var(--page-scale));
+  transform-origin: top center;
+}
+
+.editor-column[data-paged] {
+  --page-gap: 24px;
+
+  position: relative;
+  box-sizing: content-box;
+  width: var(--page-text-width);
+  max-width: none;
+  margin: 5rem auto 40vh;
+  padding: var(--page-top) var(--page-side) 0;
+  border: 1px solid var(--border);
+  border-bottom: 0;
+  background: var(--bg);
+}
+
+/* The title is not part of the pages; it sits above the first sheet. */
+.editor-column[data-paged] .editor-title {
+  position: absolute;
+  right: 0;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 1rem;
+}
+
+/* Static, so the page gaps' art is placed against the sheet, not the text block. */
+.editor-column[data-paged] .book-text.tiptap {
+  position: static;
+  min-height: 0;
+}
+
+/* The engine drops space at the top of a page and below a page's last block. */
+.book-text.tiptap > :first-child,
+.book-text > .page-gap + * {
+  margin-top: 0;
+}
+
+.book-text > :has(+ .page-gap) {
+  margin-bottom: 0;
+}
+
+.page-gap,
+.page-gap span {
+  display: block;
+  text-indent: 0;
+  user-select: none;
+}
+
+/*
+ * Inside a paragraph, a full-width inline block rather than a block: the
+ * line before it then wraps like any other line, so justified text stays
+ * justified up to the page break. Aligned to the top, it adds no height of
+ * its own to the line it sits on.
+ */
+.book-text :is(p, h1, h2, h3, pre) > .page-gap {
+  display: inline-block;
+  width: 100%;
+  vertical-align: top;
+}
+
+/* Takes the band's height in the text flow; the band's art is drawn across the whole sheet. */
+.page-gap-band {
+  height: calc(var(--page-bottom) + var(--page-gap) + var(--page-top) + 2px);
+}
+
+.page-gap-last .page-gap-band {
+  height: calc(var(--page-bottom) + 1px);
+}
+
+.page-gap .page-gap-art {
+  position: absolute;
+  right: -1px;
+  left: -1px;
+}
+
+.page-gap .page-gap-foot {
+  display: flex;
+  height: var(--page-bottom);
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-top: 0;
+  background: var(--bg);
+  color: var(--fg-muted);
+  font-size: 0.8em;
+  font-variant-numeric: tabular-nums;
+}
+
+.page-gap .page-gap-between {
+  height: var(--page-gap);
+  background: var(--bg-subtle);
+}
+
+.page-gap .page-gap-head {
+  height: var(--page-top);
+  border: 1px solid var(--border);
+  border-bottom: 0;
+  background: var(--bg);
 }

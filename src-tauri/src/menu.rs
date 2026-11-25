@@ -96,6 +96,7 @@ pub struct MenuChecks {
     sidebar: CheckMenuItem<Wry>,
     zen: CheckMenuItem<Wry>,
     toolbar: CheckMenuItem<Wry>,
+    paged: CheckMenuItem<Wry>,
     typewriter: CheckMenuItem<Wry>,
     dim_off: CheckMenuItem<Wry>,
     dim_sentence: CheckMenuItem<Wry>,
@@ -109,6 +110,7 @@ pub struct MenuCheckState {
     sidebar: bool,
     zen: bool,
     toolbar: bool,
+    paged: bool,
     typewriter: bool,
     /// "off", "sentence" or "paragraph".
     dim_mode: String,
@@ -121,6 +123,7 @@ pub fn set_menu_checks(checks: State<'_, MenuChecks>, state: MenuCheckState) -> 
         (&checks.sidebar, state.sidebar),
         (&checks.zen, state.zen),
         (&checks.toolbar, state.toolbar),
+        (&checks.paged, state.paged),
         (&checks.typewriter, state.typewriter),
         (&checks.dim_off, state.dim_mode == "off"),
         (&checks.dim_sentence, state.dim_mode == "sentence"),
@@ -188,6 +191,7 @@ pub fn build(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
     let sidebar = check("sidebar", "Show Sidebar", Some("CmdOrCtrl+Backslash"))?;
     let zen = check("zen", "Zen Mode", Some("CmdOrCtrl+Shift+F"))?;
     let toolbar = check("toolbar", "Show Toolbar", Some("CmdOrCtrl+Alt+T"))?;
+    let paged = check("paged", "Paged View", Some("CmdOrCtrl+Shift+P"))?;
     let typewriter = check(
         "typewriter",
         "Typewriter Scrolling",
@@ -220,6 +224,7 @@ pub fn build(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
             &palette_separator,
             &sidebar,
             &toolbar,
+            &paged,
             &zen,
             &typewriter,
             &dimming,
@@ -230,6 +235,7 @@ pub fn build(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
             &stats,
             &sidebar,
             &toolbar,
+            &paged,
             &zen,
             &typewriter,
             &dimming,
@@ -279,6 +285,7 @@ pub fn build(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
         sidebar,
         zen,
         toolbar,
+        paged,
         typewriter,
         dim_off,
         dim_sentence,

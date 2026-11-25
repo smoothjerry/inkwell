@@ -30,6 +30,8 @@ type ToolbarOverflowMenuProps = {
   apply: (action: string) => void;
   onFont: (fontId: FontId) => void;
   onSize: (size: number) => void;
+  /** In paged view the book format sets the font and size, so their menus are disabled. */
+  isPaged: boolean;
   onCloseAutoFocus: (event: Event) => void;
 };
 
@@ -40,6 +42,7 @@ export function ToolbarOverflowMenu({
   apply,
   onFont,
   onSize,
+  isPaged,
   onCloseAutoFocus,
 }: ToolbarOverflowMenuProps) {
   function group(id: ToolbarGroup) {
@@ -76,7 +79,7 @@ export function ToolbarOverflowMenu({
       case "font":
         return (
           <DropdownMenuSub>
-            <DropdownMenuSubTrigger>Font</DropdownMenuSubTrigger>
+            <DropdownMenuSubTrigger disabled={isPaged}>Font</DropdownMenuSubTrigger>
             <DropdownMenuSubContent className="max-h-96 w-56 overflow-y-auto">
               <DropdownMenuRadioGroup
                 value={state.fontId ?? ""}
@@ -105,7 +108,7 @@ export function ToolbarOverflowMenu({
       case "size":
         return (
           <DropdownMenuSub>
-            <DropdownMenuSubTrigger>Size</DropdownMenuSubTrigger>
+            <DropdownMenuSubTrigger disabled={isPaged}>Size</DropdownMenuSubTrigger>
             <DropdownMenuSubContent className="max-h-80 overflow-y-auto">
               <DropdownMenuRadioGroup
                 value={state.fontSize === null ? "" : String(state.fontSize)}
