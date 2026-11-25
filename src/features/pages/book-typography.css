@@ -232,6 +232,18 @@
   user-select: none;
 }
 
+/*
+ * Inside a paragraph, a full-width inline block rather than a block: the
+ * line before it then wraps like any other line, so justified text stays
+ * justified up to the page break. Aligned to the top, it adds no height of
+ * its own to the line it sits on.
+ */
+.book-text :is(p, h1, h2, h3, pre) > .page-gap {
+  display: inline-block;
+  width: 100%;
+  vertical-align: top;
+}
+
 /* Takes the band's height in the text flow; the band's art is drawn across the whole sheet. */
 .page-gap-band {
   height: calc(var(--page-bottom) + var(--page-gap) + var(--page-top) + 2px);

@@ -68,6 +68,8 @@ function setTabStop(toolbar: HTMLElement, index: number) {
  */
 export function FormattingToolbar({ editor }: FormattingToolbarProps) {
   const editorFont = useSettingsStore((state) => state.editorFont);
+  // In paged view the book format sets the type; the document's own is kept but not shown.
+  const isPaged = useSettingsStore((state) => state.pagedView);
   const state = useEditorState({
     editor,
     selector: ({ editor }) => getToolbarState(editor, editorFont),
@@ -358,16 +360,26 @@ export function FormattingToolbar({ editor }: FormattingToolbarProps) {
       onKeyDown={onKeyDown}
       onFocus={onFocus}
     >
-      {TOOLBAR_GROUPS.map((id, index) => (
-        <div
-          key={id}
-          data-toolbar-group={id}
-          hidden={index >= visibleCount}
-          className="flex shrink-0 items-center gap-0.5 pr-1.5 not-first:border-l not-first:pl-1.5"
-        >
-          {renderGroup(id)}
-        </div>
-      ))}
+      {TOOLBAR_GROUPS.map((id, index) => {
+        const isSetByBook = isPaged && (id === "font" || id === "size");
+        return (
+          <div
+            key={id}
+            data-toolbar-group={id}
+            hidden={index >= visibleCount}
+            title={isSetByBook ? "Set by the book format in paged view" : undefined}
+            className="flex shrink-0 items-center gap-0.5 pr-1.5 not-first:border-l not-first:pl-1.5"
+          >
+            {isSetByBook ? (
+              <fieldset disabled className="contents">
+                {renderGroup(id)}
+              </fieldset>
+            ) : (
+              renderGroup(id)
+            )}
+          </div>
+        );
+      })}
       {hiddenGroups.length > 0 && (
         <div className="ml-auto flex shrink-0 items-center">
           <ToolbarOverflowMenu
@@ -376,6 +388,7 @@ export function FormattingToolbar({ editor }: FormattingToolbarProps) {
             apply={apply}
             onFont={(fontId) => chooseFont(editor, fontId)}
             onSize={(size) => chooseFontSize(editor, size)}
+            isPaged={isPaged}
             onCloseAutoFocus={returnToDocument}
           />
         </div>

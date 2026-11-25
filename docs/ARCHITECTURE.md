@@ -200,6 +200,7 @@ M10 (DESIGN_SPEC §7.9, §7.10) is being built: print formats, books, the pagina
   - `paged-view-plugin.ts` draws each page break as a ProseMirror widget decoration at the engine's break position: the rest of the page, the bottom margin with the page number, the space between sheets, and the next top margin. Page numbers continue from the book's earlier chapters. Gaps are not text: copying leaves them out, screen readers skip them, and the plugin steps the caret over them with ←/→, since browsers stop at a non-editable element inside a paragraph.
   - Typing maps the gaps; pages are recomputed 400 ms after typing pauses, never on a keystroke. The status bar shows `Page 8 of ≈ 17` for the caret.
   - Switching on is split across frames (typography, then the plugin and the first pagination) so no task runs over 50 ms. Narrow windows scale the sheets with a transform, not CSS `zoom`, which would re-wrap the text.
+  - Inside a paragraph a gap is a full-width inline block, so the line before it wraps like any other and justified text stays justified. While the view is on, the toolbar's font and size pickers are disabled: the book format sets the type.
 
 ## Performance budgets
 
