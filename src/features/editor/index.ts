@@ -1,5 +1,7 @@
 import { lazy } from "react";
 
+export { useActiveEditorStore } from "./active-editor-store";
+
 export { flushAutosaves, subscribeToSaves, whenSavesSettle } from "./autosaver";
 export { useDocumentStyleStore } from "./document-style-store";
 export { createEditorExtensions } from "./editor-extensions";

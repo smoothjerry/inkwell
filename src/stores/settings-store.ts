@@ -31,6 +31,8 @@ export type Settings = {
   editorWidth: EditorWidth;
   /** The print format of page counts for documents outside any book (DESIGN_SPEC §7.9). */
   defaultBookFormat: BookFormatId;
+  /** Whether documents are shown as pages of their print format (⌘⇧P, DESIGN_SPEC §7.10). */
+  pagedView: boolean;
   /** Whether the formatting toolbar is shown above the document (⌘⌥T). */
   showToolbar: boolean;
   /** Keep the caret line near the middle of the window while writing. */
@@ -60,6 +62,7 @@ const DEFAULTS: Settings = {
   editorWidth: "medium",
   defaultBookFormat: DEFAULT_BOOK_FORMAT_ID,
   showToolbar: true,
+  pagedView: false,
   typewriterMode: false,
   dimMode: "off",
   celebrations: true,
@@ -84,6 +87,7 @@ const VALIDATORS: { [Key in keyof Settings]: (value: unknown) => boolean } = {
   editorWidth: (value) => EDITOR_WIDTHS.includes(value as EditorWidth),
   defaultBookFormat: isBookFormatId,
   showToolbar: (value) => typeof value === "boolean",
+  pagedView: (value) => typeof value === "boolean",
   typewriterMode: (value) => typeof value === "boolean",
   dimMode: (value) => DIM_MODES.includes(value as DimMode),
   celebrations: (value) => typeof value === "boolean",

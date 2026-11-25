@@ -13,6 +13,11 @@ export type PageCountStatus = {
 type PageCountState = {
   /** Null while counting, or when no document is open. */
   status: PageCountStatus | null;
+  /**
+   * In the paged view, the page holding the caret, counted within the open
+   * document from 1, and the document's own page count (DESIGN_SPEC §7.10).
+   */
+  pagedPage: { page: number; count: number } | null;
 };
 
-export const usePageCountStore = create<PageCountState>(() => ({ status: null }));
+export const usePageCountStore = create<PageCountState>(() => ({ status: null, pagedPage: null }));

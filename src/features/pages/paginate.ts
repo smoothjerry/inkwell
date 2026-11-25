@@ -1,4 +1,4 @@
-import { DOMSerializer, type Node as ProseMirrorNode, type Schema } from "@tiptap/pm/model";
+import { DOMSerializer, Node as ProseMirrorNode, type Schema } from "@tiptap/pm/model";
 import { getSchema, type JSONContent } from "@tiptap/react";
 import { type BookFormat, textBlockSize } from "@/domain/book-formats";
 import { type MeasuredBlock, type PageStart, packPages } from "@/domain/pagination";
@@ -17,10 +17,13 @@ import {
 export type Pagination = {
   count: number;
   /**
-   * Where pages 2 onwards start, as document positions: the start of each
-   * page's first line. The paged view draws its page gaps here.
+   * Where pages 2 onwards start, as document positions: before the page's
+   * first block when it starts with one, else at the first character of its
+   * first line. The paged view draws its page gaps here.
    */
   breaks: number[];
+  /** Each page's used height in CSS px; the paged view fills the rest of the page. */
+  pageHeights: number[];
 };
 
 /** Measurements are kept per format and block, so an edit re-measures only what changed. */
@@ -109,7 +112,10 @@ function lineStartOffset(element: HTMLElement, line: number, lineHeight: number)
     const local = offset - segment.start;
     range.setStart(segment.node, local);
     range.setEnd(segment.node, Math.min(local + 1, segment.length));
-    return range.getClientRects()[0]?.top ?? range.getBoundingClientRect().top;
+    // WebKit gives a line's first character an extra zero-width rect at the
+    // end of the line before; the last rect is where the character is drawn.
+    const rects = range.getClientRects();
+    return rects[rects.length - 1]?.top ?? range.getBoundingClientRect().top;
   };
 
   let low = 0;
@@ -127,14 +133,36 @@ function lineStartOffset(element: HTMLElement, line: number, lineHeight: number)
 
 type Owner = { item: TopLevel; index: number; pos: number; lineHeight: number };
 
-/** The document position where a page's first line starts. */
-function breakPosition(page: PageStart, owners: Owner[], box: MeasuringBox, end: number): number {
+/**
+ * The position before a block, moved out of any parent it opens (a list
+ * item, a quote), so a page that starts with it starts at a block boundary
+ * and the block keeps its first-line indent and list marker.
+ */
+function blockStart(doc: ProseMirrorNode, pos: number): number {
+  const resolved = doc.resolve(pos);
+  let start = pos;
+  for (let depth = resolved.depth; depth > 0 && resolved.index(depth) === 0; depth -= 1) {
+    start = resolved.before(depth);
+  }
+  return start;
+}
+
+/**
+ * The document position where a page starts: before its first block when
+ * the page starts with one, else the first character of its first line.
+ */
+function breakPosition(
+  page: PageStart,
+  owners: Owner[],
+  box: MeasuringBox,
+  doc: ProseMirrorNode,
+): number {
   const owner = owners[page.block];
   if (!owner) {
-    return end;
+    return doc.content.size;
   }
   if (page.line === 0) {
-    return owner.pos + 1;
+    return blockStart(doc, owner.pos);
   }
   owner.item.element ??= box.render(owner.item.node, owner.item.noIndent);
   const element = textBlockElements(owner.item.element)[owner.index];
@@ -151,13 +179,16 @@ function breakPosition(page: PageStart, owners: Owner[], box: MeasuringBox, end:
  * measured again.
  */
 export async function paginate(
-  content: JSONContent,
+  content: JSONContent | ProseMirrorNode,
   format: BookFormat,
   signal?: AbortSignal,
 ): Promise<Pagination> {
   await loadFonts(format);
   const { schema, serializer } = editorSchema();
-  const doc = schema.nodeFromJSON(content);
+  // The paged view passes its live document; serializing works by type
+  // name, so a document from the editor's own schema serializes the same.
+  const doc: ProseMirrorNode =
+    content instanceof ProseMirrorNode ? content : schema.nodeFromJSON(content);
 
   const items: TopLevel[] = [];
   let previousType: string | null = null;
@@ -235,7 +266,7 @@ export async function paginate(
     const breaks: number[] = [];
     sliceStart = performance.now();
     for (const page of pages.slice(1)) {
-      breaks.push(breakPosition(page, owners, box, doc.content.size));
+      breaks.push(breakPosition(page, owners, box, doc));
       if (performance.now() - sliceStart > 8) {
         if (signal?.aborted) {
           throw new DOMException("Pagination was cancelled", "AbortError");
@@ -244,7 +275,7 @@ export async function paginate(
         sliceStart = performance.now();
       }
     }
-    return { count: pages.length, breaks };
+    return { count: pages.length, breaks, pageHeights: pages.map((page) => page.height) };
   } finally {
     box.dispose();
   }

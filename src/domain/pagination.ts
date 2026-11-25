@@ -20,8 +20,11 @@ export type MeasuredBlock = {
   splittable: boolean;
 };
 
-/** Where a page starts: a block, and the first of its lines on this page. */
-export type PageStart = { block: number; line: number };
+/**
+ * A page: the block and line it starts at, and the height its content uses,
+ * in CSS px. The paged view fills the rest of the page below it.
+ */
+export type PageStart = { block: number; line: number; height: number };
 
 /**
  * Widow and orphan control: a block split across pages leaves at least this
@@ -43,11 +46,15 @@ function linesThatFit(space: number, lineHeight: number): number {
  * split wherever it must be.
  */
 export function packPages(blocks: readonly MeasuredBlock[], pageHeight: number): PageStart[] {
-  const pages: PageStart[] = [{ block: 0, line: 0 }];
+  const pages: PageStart[] = [{ block: 0, line: 0, height: 0 }];
   let used = 0;
 
   const startPage = (block: number, line: number) => {
-    pages.push({ block, line });
+    const current = pages.at(-1);
+    if (current) {
+      current.height = used;
+    }
+    pages.push({ block, line, height: 0 });
     used = 0;
   };
 
@@ -85,8 +92,13 @@ export function packPages(blocks: readonly MeasuredBlock[], pageHeight: number):
         take = Math.max(1, room);
       }
       line += take;
+      used += gap() + take * block.lineHeight;
       startPage(index, line);
     }
+  }
+  const last = pages.at(-1);
+  if (last) {
+    last.height = used;
   }
   return pages;
 }

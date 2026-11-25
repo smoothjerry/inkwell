@@ -178,7 +178,7 @@ The editor's font library (DESIGN_SPEC §7.11) is defined as data in `src/domain
 
 ## Books and pages
 
-M10 (DESIGN_SPEC §7.9, §7.10) is being built: print formats, books, the pagination engine, and page counts so far.
+M10 (DESIGN_SPEC §7.9, §7.10) is being built: print formats, books, the pagination engine, page counts, and the paged view so far.
 
 - The print formats are data in `src/domain/book-formats.ts`: trim, margins, type size, and line height for each preset. Sizes are written in inches or mm, as the spec gives them, and stored in points, the unit the pagination engine will lay pages out in. `textBlockSize` gives the area inside the margins.
 - A folder is a book when its `book_format` column (migration `002_books.sql`) holds a format id. The folder's context menu ▸ Book Format sets or clears it (`book-format-submenu.tsx`, `setBookFormat` in the library store), and a book's row shows a book icon.
@@ -186,15 +186,20 @@ M10 (DESIGN_SPEC §7.9, §7.10) is being built: print formats, books, the pagina
 - `readingOrder` lists a book's chapters: depth-first, in manual order, subfolders (parts) before a folder's own documents, as the sidebar shows them in manual sort. The sidebar's sort mode does not change it, and trashed documents are left out.
 - **Pagination engine** (`src/features/pages/`, DESIGN_SPEC §7.9). `paginate(content, format)` returns the page count and the break positions (the document position where each page's first line starts). It measures, then packs:
   - `measure-blocks.ts` renders each top-level block into a hidden `.book-text` box of the format's text-block width, at 96 px per inch, in batches, yielding to the main thread after about 8 ms. It records each text block's (paragraph, heading, code block) line count, line height, and offset, and the block's margins. Results are cached per block and format, so after an edit only changed blocks are measured.
-  - `book-typography.css` is the format's typography, meant to be shared with the paged view. Only top-level blocks have margins, so a block measured alone has its height in the document, and the gap between blocks is the larger margin. Paragraphs that open the document or follow a heading are marked `book-no-indent` by the engine, since a block measured alone has no siblings.
+  - `book-typography.css` is the format's typography, shared with the paged view. It turns ligatures off, as ProseMirror does in the editor, so lines wrap the same in both. Only top-level blocks have margins, so a block measured alone has its height in the document, and the gap between blocks is the larger margin. Paragraphs that open the document or follow a heading are marked `book-no-indent` by the engine, since a block measured alone has no siblings.
   - `packPages` in `src/domain/pagination.ts` (pure, tested) fills pages: headings keep with the next block's first lines, and splits leave at least two lines on each side.
-  - For a page that starts mid-paragraph, `lineStartOffset` finds the first character of the line with a binary search over `Range` rectangles; hard breaks count as one character, as in the document.
+  - For a page that starts mid-paragraph, `lineStartOffset` finds the first character of the line with a binary search over `Range` rectangles; hard breaks count as one character, as in the document. It reads a character's last rectangle: WebKit gives a line's first character an extra zero-width one at the end of the line before.
   - `paginateDocument` caches results per document, format, and `updated_at`, and shares a run that is still going.
   - The prototype's measurements are in the spec (§7.9).
 - **Page counts** (DESIGN_SPEC §7.9). `pageCountScope` gives what a count covers: the open document's book (by `containingBook` and `readingOrder`) in the book's format, or the document alone in the `defaultBookFormat` setting. `countPages` paginates its chapters one after another and turns their counts into page ranges (`pageRanges`, pure, tested). It first reads only each chapter's `updated_at` (`listDocumentVersions`), and `paginateDocument` loads content only on a cache miss, so an unchanged chapter is never read.
   - `use-page-count.ts` recounts 300 ms after a save of one of the scope's chapters (`subscribeToSaves` in the autosaver), a document switch, a library change, or a default-format change; never on a keystroke. `PageCountStatus` shows `≈ 312 pages · pp. 41–52` in the status bar, with the format and why it is an estimate in its tooltip.
   - The Page Counts dialog counts every format. It opens when `pageCountsTarget` is set in the view store, by a book's context menu or the palette, so the library never imports the pages feature.
   - `src/features/pages/index.ts` exports only light pieces; the engine (`paginate.ts`, `count-pages.ts`) is loaded with `import()`, so it stays out of the startup bundle.
+- **Paged view** (DESIGN_SPEC §7.10). View ▸ Paged View (⇧⌘P), the palette, or the `pagedView` setting turns it on. `PagedView` (lazy, with the engine) renders nothing: it takes the open editor from `useActiveEditorStore` in the editor feature, so the editor never imports the pages feature, and turns it into pages of the document's format (its book's, or the default).
+  - The editor gets the `book-text` typography and the column becomes the sheet (`data-paged` on `.editor-column`). `editor.css` scopes its own block spacing to `.editor-prose:not(.book-text)`, so on screen blocks measure as in the engine's box.
+  - `paged-view-plugin.ts` draws each page break as a ProseMirror widget decoration at the engine's break position: the rest of the page, the bottom margin with the page number, the space between sheets, and the next top margin. Page numbers continue from the book's earlier chapters. Gaps are not text: copying leaves them out, screen readers skip them, and the plugin steps the caret over them with ←/→, since browsers stop at a non-editable element inside a paragraph.
+  - Typing maps the gaps; pages are recomputed 400 ms after typing pauses, never on a keystroke. The status bar shows `Page 8 of ≈ 17` for the caret.
+  - Switching on is split across frames (typography, then the plugin and the first pagination) so no task runs over 50 ms. Narrow windows scale the sheets with a transform, not CSS `zoom`, which would re-wrap the text.
 
 ## Performance budgets
 
@@ -210,6 +215,19 @@ Measured on 2026-11-19 on an Apple Silicon Mac (macOS 26.6), release build unles
 | Idle CPU ~0% | Met: 0.00 s of CPU in 60 s | CPU time of the installed app and its WebKit helpers, from `ps`, with a document open and no typing. |
 
 Not measured: the Windows cold start, because no Windows machine was available, and the sidebar above 500 items. The library has not reached that size, so it is not virtualized yet (§9).
+
+### Paged view (M10)
+
+Measured on 2026-11-25 on the same Mac: a 50k-word document (paragraphs of 40–140 words, a heading every 25 blocks) in trade 6 × 9, 120 pages, dev build with the database stubbed. Safari runs the same WebKit as the app.
+
+| Budget (§9) | Chromium | Safari (WebKit) |
+|---|---|---|
+| First paged view < 1 s, no task > 50 ms | Met: 81–94 ms (about 400 ms the first time, while the engine loads); longest task 27–39 ms | Met: 78–104 ms (390 ms the first time); longest task 35–46 ms |
+| Pages correct < 500 ms after a pause | Met: 445–457 ms | Met: 449 ms |
+| Keystroke → paint < 16 ms | Met at the median: 6.0 ms, p90 13.8 ms, worst 21.7 ms (pageless: 3.9, 6.3, 10.1 ms) | Met at the median: 7.0 ms, p90 15.0 ms, worst 19.0 ms (pageless: 7.0, 12.0, 13.0 ms) |
+| Pages on screen match the engine | Met: every page within 0.01 px | Met: every page within 0.34 px |
+
+Keystrokes were 25 one-letter inserts in the middle of the document, timed from the insert to a task after the next paint; Safari's timer has 1 ms steps. The worst keystrokes in paged view run a few ms over the budget, against none pageless; the median matches pageless.
 
 ### Why cold start misses, and what would fix it
 

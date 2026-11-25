@@ -20,6 +20,7 @@ export function syncMenuChecks(force = false) {
     sidebar: !settings.sidebarCollapsed,
     zen: useViewStore.getState().isZen,
     toolbar: settings.showToolbar,
+    paged: settings.pagedView,
     typewriter: settings.typewriterMode,
     dimMode: settings.dimMode,
   };

@@ -6,6 +6,7 @@ import { fontFamilyCss } from "@/domain/fonts";
 import { countWords } from "@/domain/word-count";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useViewStore } from "@/stores/view-store";
+import { useActiveEditorStore } from "./active-editor-store";
 import { createAutosaver } from "./autosaver";
 import { BubbleToolbar } from "./bubble-toolbar";
 import { getDocumentStyle } from "./document-style";
@@ -88,6 +89,16 @@ export function DocumentEditor({ documentId, initialContent, toolbarSlot }: Docu
   useEffect(() => {
     editor.view.dispatch(editor.state.tr);
   }, [editor, dimMode]);
+
+  // Other features (the paged view) reach the open editor through this store.
+  useEffect(() => {
+    useActiveEditorStore.setState({ editor, documentId });
+    return () => {
+      if (useActiveEditorStore.getState().editor === editor) {
+        useActiveEditorStore.setState({ editor: null, documentId: null });
+      }
+    };
+  }, [editor, documentId]);
 
   // The native Format menu acts on this editor while it is open.
   useEffect(() => setFormatMenuHandler((action) => runFormatAction(editor, action)), [editor]);

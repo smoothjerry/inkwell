@@ -8,6 +8,7 @@ import {
   PAGE_COUNT_COMMANDS,
   PageCountStatus,
   PageCountsDialog,
+  PagedView,
   usePageCount,
 } from "@/features/pages";
 import { SettingsView } from "@/features/settings";
@@ -45,6 +46,7 @@ export function App() {
   const theme = useSettingsStore((state) => state.theme);
   const view = useViewStore((state) => state.view);
   const isZen = useViewStore((state) => state.isZen);
+  const isPaged = useSettingsStore((state) => state.pagedView);
   const isSidebarCollapsed = useSettingsStore((state) => state.sidebarCollapsed);
   const savedSidebarWidth = useSettingsStore((state) => state.sidebarWidth);
   // The width while the edge is being dragged; it is saved when the drag ends.
@@ -151,6 +153,11 @@ export function App() {
       />
       <ExportDialog />
       <PageCountsDialog />
+      {isPaged && view === "editor" && (
+        <Suspense fallback={null}>
+          <PagedView />
+        </Suspense>
+      )}
       <OnboardingDialog />
       <Toaster theme={theme} position="bottom-right" />
     </div>

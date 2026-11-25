@@ -1,4 +1,5 @@
 import {
+  BookOpenText,
   ChartNoAxesColumn,
   FilePlus,
   Focus,
@@ -91,6 +92,13 @@ export const COMMANDS: Command[] = [
     keywords: "formatting format bar show hide",
     Icon: PanelTop,
     run: () => settings().update({ showToolbar: !settings().showToolbar }),
+  },
+  {
+    id: "toggle-paged-view",
+    title: "Toggle Paged View",
+    keywords: "pages print book layout sheets",
+    Icon: BookOpenText,
+    run: () => settings().update({ pagedView: !settings().pagedView }),
   },
   {
     id: "toggle-typewriter",
